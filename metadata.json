@@ -1,0 +1,6 @@
+{
+  "name": "UNIPORT Faculty of Computing CSA Timetable Scheduler",
+  "description": "An intelligent, constraint-satisfaction algorithm (CSA) driven academic timetabling platform for the Faculty of Computing, University of Port Harcourt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

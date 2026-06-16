@@ -1,0 +1,771 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from "react";
+import { Users, BookOpen, MapPin, Database, Award, Trash2, Plus, Download, Upload, Info, RefreshCcw } from "lucide-react";
+import { Course, Lecturer, Venue, Department } from "../types";
+import { TIMESLOTS, DAYS } from "../cspSolver";
+
+interface DashboardProps {
+  lecturers: Lecturer[];
+  courses: Course[];
+  venues: Venue[];
+  onAddLecturer: (lec: Lecturer) => void;
+  onAddCourse: (course: Course) => void;
+  onAddVenue: (venue: Venue) => void;
+  onDeleteLecturer: (id: string) => void;
+  onDeleteCourse: (id: string) => void;
+  onDeleteVenue: (id: string) => void;
+  onSeedData: () => void;
+  onCleanDatabase: () => void;
+  onRestoreDatabase: (db: { lecturers: Lecturer[]; courses: Course[]; venues: Venue[] }) => void;
+}
+
+type TabType = "lecturers" | "courses" | "venues" | "db-hub";
+
+export default function Dashboard({
+  lecturers,
+  courses,
+  venues,
+  onAddLecturer,
+  onAddCourse,
+  onAddVenue,
+  onDeleteLecturer,
+  onDeleteCourse,
+  onDeleteVenue,
+  onSeedData,
+  onCleanDatabase,
+  onRestoreDatabase
+}: DashboardProps) {
+  const [activeTab, setActiveTab] = useState<TabType>("lecturers");
+
+  // Form toggles
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Lecturer Form states
+  const [lecId, setLecId] = useState("");
+  const [lecName, setLecName] = useState("");
+  const [lecDept, setLecDept] = useState<Department>(Department.ComputerScience);
+  const [lecEmail, setLecEmail] = useState("");
+  const [lecHours, setLecHours] = useState(12);
+  const [lecDays, setLecDays] = useState<string[]>(["Monday", "Wednesday"]);
+  const [lecTimes, setLecTimes] = useState<string[]>(["08:00 - 10:00", "10:00 - 12:00"]);
+
+  // Course Form states
+  const [crsId, setCrsId] = useState("");
+  const [crsTitle, setCrsTitle] = useState("");
+  const [crsDept, setCrsDept] = useState<Department>(Department.ComputerScience);
+  const [crsLevel, setCrsLevel] = useState(300);
+  const [crsStudents, setCrsStudents] = useState(90);
+  const [crsLecId, setCrsLecId] = useState("");
+  const [crsHours, setCrsHours] = useState(4);
+
+  // Venue Form states
+  const [venId, setVenId] = useState("");
+  const [venName, setVenName] = useState("");
+  const [venBuilding, setVenBuilding] = useState("Faculty of Computing Block");
+  const [venCapacity, setVenCapacity] = useState(100);
+  const [venIsLab, setVenIsLab] = useState(false);
+
+  // Alert State
+  const [formError, setFormError] = useState("");
+
+  const handleBackupExport = () => {
+    const dbToExport = { lecturers, courses, venues };
+    const blob = new Blob([JSON.stringify(dbToExport, null, 2)], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `UNIPORT_FacultyOfComputing_Database_${Date.now()}.json`;
+    link.click();
+  };
+
+  const handleBackupImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed.lecturers && parsed.courses && parsed.venues) {
+          onRestoreDatabase(parsed);
+          alert("Database successfully restored from JSON backup script!");
+        } else {
+          alert("Invalid file structure. Make sure the JSON configuration template contains lecturers, courses, and venues nodes.");
+        }
+      } catch (err) {
+        alert("Failed to parse JSON backup script File.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const submitLecturer = () => {
+    if (!lecId || !lecName || !lecEmail) {
+      setFormError("All lecturer fields are required.");
+      return;
+    }
+    if (lecturers.some(l => l.id.toLowerCase() === lecId.toLowerCase())) {
+      setFormError("Lecturer ID registered configuration index already exists.");
+      return;
+    }
+    onAddLecturer({
+      id: lecId,
+      name: lecName,
+      department: lecDept,
+      maxHoursPerWeek: Number(lecHours),
+      email: lecEmail,
+      preferredDays: lecDays,
+      preferredTimes: lecTimes
+    });
+    // Reset
+    setLecId(""); setLecName(""); setLecEmail("");
+    setShowAddModal(false); setFormError("");
+  };
+
+  const submitCourse = () => {
+    if (!crsId || !crsTitle || !crsLecId) {
+      setFormError("All course fields are required.");
+      return;
+    }
+    if (courses.some(c => c.id.toLowerCase() === crsId.toLowerCase())) {
+      setFormError("Course Code matrix configuration index already exists.");
+      return;
+    }
+    onAddCourse({
+      id: crsId,
+      title: crsTitle,
+      department: crsDept,
+      level: Number(crsLevel),
+      studentsCount: Number(crsStudents),
+      lecturerId: crsLecId,
+      hoursPerWeek: Number(crsHours)
+    });
+    // Reset
+    setCrsId(""); setCrsTitle(""); setCrsLecId("");
+    setShowAddModal(false); setFormError("");
+  };
+
+  const submitVenue = () => {
+    if (!venId || !venName) {
+      setFormError("All classroom fields are required.");
+      return;
+    }
+    if (venues.some(v => v.id.toLowerCase() === venId.toLowerCase())) {
+      setFormError("Venue location allocation capacity index already exists.");
+      return;
+    }
+    onAddVenue({
+      id: venId,
+      name: venName,
+      building: venBuilding,
+      capacity: Number(venCapacity),
+      isLab: venIsLab
+    });
+    // Reset
+    setVenId(""); setVenName(""); setVenIsLab(false);
+    setShowAddModal(false); setFormError("");
+  };
+
+  // Toggle dynamic days list for forms
+  const togglePreferredDay = (day: string) => {
+    if (lecDays.includes(day)) {
+      setLecDays(lecDays.filter(d => d !== day));
+    } else {
+      setLecDays([...lecDays, day]);
+    }
+  };
+
+  return (
+    <div className="space-y-6 bg-transparent" id="dashboard-resource-master">
+      {/* Visual Analytics Counter Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Lecturers */}
+        <div className="bg-white/[0.02] p-5 rounded-none border border-white/10 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="block text-white/40 font-bold text-[9px] uppercase tracking-widest font-mono">Active Lecturers</span>
+            <span className="block text-2.5xl font-medium font-serif italic text-white mt-1.5">{lecturers.length}</span>
+            <span className="block text-[10px] text-white/30 mt-1 font-sans">Syllabus instructors assigned</span>
+          </div>
+          <div className="w-10 h-10 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-white">
+            <Users className="w-4.5 h-4.5" />
+          </div>
+        </div>
+
+        {/* Courses */}
+        <div className="bg-white/[0.02] p-5 rounded-none border border-white/10 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="block text-white/40 font-bold text-[9px] uppercase tracking-widest font-mono">Course Syllabus</span>
+            <span className="block text-2.5xl font-medium font-serif italic text-white mt-1.5">{courses.length}</span>
+            <span className="block text-[10px] text-white/30 mt-1 font-sans">Total modules cataloged</span>
+          </div>
+          <div className="w-10 h-10 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-white">
+            <BookOpen className="w-4.5 h-4.5" />
+          </div>
+        </div>
+
+        {/* Venues */}
+        <div className="bg-white/[0.02] p-5 rounded-none border border-white/10 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="block text-white/40 font-bold text-[9px] uppercase tracking-widest font-mono">Lecture Venues</span>
+            <span className="block text-2.5xl font-medium font-serif italic text-white mt-1.5">{venues.length}</span>
+            <span className="block text-[10px] text-white/30 mt-1 font-sans">Lab arrays & theatre halls</span>
+          </div>
+          <div className="w-10 h-10 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-white">
+            <MapPin className="w-4.5 h-4.5" />
+          </div>
+        </div>
+
+        {/* Capacity index */}
+        <div className="bg-white/[0.02] p-5 rounded-none border border-white/10 flex items-center justify-between shadow-xs">
+          <div>
+            <span className="block text-white/40 font-bold text-[9px] uppercase tracking-widest font-mono">Capacity Index</span>
+            <span className="block text-2.5xl font-medium font-serif italic text-white mt-1.5">
+              {venues.reduce((acc, v) => acc + v.capacity, 0)}
+            </span>
+            <span className="block text-[10px] text-white/30 mt-1 font-sans">Maximum active seats</span>
+          </div>
+          <div className="w-10 h-10 rounded-none bg-white/5 border border-white/10 flex items-center justify-center text-white">
+            <Database className="w-4.5 h-4.5" />
+          </div>
+        </div>
+      </div>
+
+      {/* Database Multi-Tab Controls */}
+      <div className="bg-[#0a0a0a] rounded-none border border-white/10 p-5 space-y-5">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-white/10 pb-4 shrink-0">
+          <nav className="flex bg-white/[0.03] border border-white/10 p-0.5 rounded-none">
+            <button
+              onClick={() => setActiveTab("lecturers")}
+              className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono cursor-pointer ${
+                activeTab === "lecturers" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
+              }`}
+            >
+              Lecturers ({lecturers.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("courses")}
+              className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono cursor-pointer ${
+                activeTab === "courses" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
+              }`}
+            >
+              Courses ({courses.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("venues")}
+              className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono cursor-pointer ${
+                activeTab === "venues" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
+              }`}
+            >
+              Venues ({venues.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("db-hub")}
+              className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5 cursor-pointer ${
+                activeTab === "db-hub" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
+              }`}
+            >
+              <Database className="w-3 h-3" />
+              <span>Database Sync</span>
+            </button>
+          </nav>
+
+          {activeTab !== "db-hub" && (
+            <button
+              onClick={() => {
+                setFormError("");
+                setShowAddModal(true);
+              }}
+              className="px-4 py-2 bg-white hover:bg-[#eaeaea] text-black font-semibold text-[10px] font-mono tracking-wider uppercase rounded-none transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-black" />
+              <span>
+                {activeTab === "lecturers" && "Add Lecturer"}
+                {activeTab === "courses" && "Add Course"}
+                {activeTab === "venues" && "Add Venue"}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Tab contents output */}
+        {activeTab === "lecturers" && (
+          <div className="overflow-x-auto rounded-none border border-white/10 max-h-[500px] bg-[#050505]">
+            <table className="min-w-full text-xs divide-y divide-white/10 text-left">
+              <thead>
+                <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
+                  <th className="px-5 py-3">Staff ID</th>
+                  <th className="px-5 py-3">Full Instructor Name</th>
+                  <th className="px-5 py-3">Department Domain</th>
+                  <th className="px-5 py-3">Contact Email</th>
+                  <th className="px-5 py-3">Work Capacity</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-white/70">
+                {lecturers.map((lec) => (
+                  <tr key={lec.id} className="hover:bg-white/[0.01]">
+                    <td className="px-5 py-3 font-mono font-bold text-white/40">{lec.id}</td>
+                    <td className="px-5 py-3 text-white font-bold text-xs">{lec.name}</td>
+                    <td className="px-5 py-3 text-white/60">{lec.department}</td>
+                    <td className="px-5 py-3 text-white/50">{lec.email}</td>
+                    <td className="px-5 py-3 text-white/60 font-mono font-bold">{lec.maxHoursPerWeek} hrs/week</td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => onDeleteLecturer(lec.id)}
+                        className="p-1 px-2.5 border border-white/10 text-rose-500/80 hover:text-rose-400 hover:bg-rose-950/20 hover:border-rose-900/50 rounded-none justify-end ml-auto flex items-center space-x-1 font-semibold text-[9px] uppercase font-mono tracking-wider transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                        <span>Remove</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {lecturers.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-white/30 italic font-mono uppercase tracking-widest text-[10px]">
+                      No lecturer registration profiles entered. Open 'Database Sync' tab to seed mock templates.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === "courses" && (
+          <div className="overflow-x-auto rounded-none border border-white/10 max-h-[500px] bg-[#050505]">
+            <table className="min-w-full text-xs divide-y divide-white/10 text-left">
+              <thead>
+                <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
+                  <th className="px-5 py-3">Course Code</th>
+                  <th className="px-5 py-3">Syllabus Title</th>
+                  <th className="px-5 py-3">Department Domain</th>
+                  <th className="px-5 py-3">Target Cohort</th>
+                  <th className="px-5 py-3">Enrollment</th>
+                  <th className="px-5 py-3">Required Hours</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-white/70">
+                {courses.map((crs) => (
+                  <tr key={crs.id} className="hover:bg-white/[0.01]">
+                    <td className="px-5 py-3 font-extrabold text-white text-xs font-mono">{crs.id}</td>
+                    <td className="px-5 py-3 text-white/90 font-semibold">{crs.title}</td>
+                    <td className="px-5 py-3 text-white/60">{crs.department}</td>
+                    <td className="px-5 py-3 text-white/50 font-mono font-semibold">{crs.level} Level</td>
+                    <td className="px-5 py-3 text-white/80 font-bold">{crs.studentsCount} Students</td>
+                    <td className="px-5 py-3 font-mono text-white/50">{crs.hoursPerWeek} Hours (Weekly)</td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => onDeleteCourse(crs.id)}
+                        className="p-1 px-2.5 border border-white/10 text-rose-500/80 hover:text-rose-400 hover:bg-rose-950/20 hover:border-rose-900/50 rounded-none justify-end ml-auto flex items-center space-x-1 font-semibold text-[9px] uppercase font-mono tracking-wider transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                        <span>Remove</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {courses.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="text-center py-10 text-white/30 italic font-mono uppercase tracking-widest text-[10px]">
+                      No course modules registered. Populate templates in Database Sync.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === "venues" && (
+          <div className="overflow-x-auto rounded-none border border-white/10 max-h-[500px] bg-[#050505]">
+            <table className="min-w-full text-xs divide-y divide-white/10 text-left">
+              <thead>
+                <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
+                  <th className="px-5 py-3">Venue ID</th>
+                  <th className="px-5 py-3">Building Hall Name</th>
+                  <th className="px-5 py-3">Sector Location</th>
+                  <th className="px-5 py-3">Total Seats</th>
+                  <th className="px-5 py-3">Classification</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-white/70">
+                {venues.map((ven) => (
+                  <tr key={ven.id} className="hover:bg-white/[0.01]">
+                    <td className="px-5 py-3 font-mono font-extrabold text-white/40">{ven.id}</td>
+                    <td className="px-5 py-3 text-white font-bold text-xs">{ven.name}</td>
+                    <td className="px-5 py-3 text-white/50">{ven.building}</td>
+                    <td className="px-5 py-3 text-white font-bold font-mono">{ven.capacity} Seats</td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-block py-0.5 px-2 font-bold text-[8px] font-mono tracking-wider uppercase rounded-none ${
+                        ven.isLab ? "bg-amber-950/30 text-amber-300 border border-amber-500/20" : "bg-white/5 text-white/60 border border-white/5"
+                      }`}>
+                        {ven.isLab ? "Computers Lab" : "Lecture Hall"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => onDeleteVenue(ven.id)}
+                        className="p-1 px-2.5 border border-white/10 text-rose-500/80 hover:text-rose-400 hover:bg-rose-950/20 hover:border-rose-900/50 rounded-none justify-end ml-auto flex items-center space-x-1 font-semibold text-[9px] uppercase font-mono tracking-wider transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                        <span>Remove</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {venues.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-white/30 italic font-mono uppercase tracking-widest text-[10px]">
+                      No physical lecture classrooms recorded.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Database control sync hub panel */}
+        {activeTab === "db-hub" && (
+          <div className="p-4 bg-white/[0.01] rounded-none border border-white/10 space-y-5" id="dashboard-db-panel">
+            <div className="p-3.5 bg-indigo-950/20 border border-indigo-500/20 text-indigo-200 flex items-start space-x-3 text-xs leading-relaxed">
+              <Info className="w-4.5 h-4.5 text-indigo-400 mt-0.5 shrink-0 animate-pulse-slow" />
+              <div>
+                <strong className="text-white font-semibold">Atomic Database Administrator Control</strong>
+                <p className="mt-0.5 text-indigo-100/70">
+                  Manage the state machine in memory. You can seed the official UNIPORT Faculty of Computing sample data, wipe records clean, or save/restore complete database dumps as standard JSON configuration scripts below.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Seed */}
+              <div className="p-5 bg-white/[0.02] rounded-none border border-white/10 flex flex-col justify-between h-48 shadow-xs">
+                <div>
+                  <h4 className="font-bold text-white text-xs flex items-center space-x-1.5 font-sans tracking-wide">
+                    <Award className="w-4 h-4 text-amber-400" />
+                    <span>Seed UNIPORT Faculty Data</span>
+                  </h4>
+                  <p className="text-[10.5px] text-white/40 mt-2 leading-relaxed">
+                    Prepopulate database pools with senior faculty profiles (Prof. Benson, Dr. Grace), 8 complex departmental courses, and 4 major lecture rooms/labs automatically.
+                  </p>
+                </div>
+                <button
+                  onClick={onSeedData}
+                  className="w-full py-2 bg-white hover:bg-slate-200 text-black font-bold font-mono text-[9px] uppercase tracking-wider rounded-none flex items-center justify-center space-x-1.5 cursor-pointer mt-3 transition-all"
+                >
+                  <RefreshCcw className="w-3.5 h-3.5" />
+                  <span>Seeding Pool (Replace)</span>
+                </button>
+              </div>
+
+              {/* Download JSON Backup */}
+              <div className="p-5 bg-white/[0.02] rounded-none border border-white/10 flex flex-col justify-between h-48 shadow-xs">
+                <div>
+                  <h4 className="font-bold text-white text-xs flex items-center space-x-1.5 font-sans tracking-wide">
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span>Save Complete Backup</span>
+                  </h4>
+                  <p className="text-[10.5px] text-white/40 mt-2 leading-relaxed">
+                    Export the current tables (Lecturers, Courses, Classrooms) into an atomic database script backup file saved as portable raw JSON metadata.
+                  </p>
+                </div>
+                <button
+                  onClick={handleBackupExport}
+                  className="w-full py-2 border border-white/20 bg-transparent hover:bg-white/5 text-white font-bold font-mono text-[9px] uppercase tracking-wider rounded-none flex items-center justify-center space-x-1.5 cursor-pointer mt-3 transition-all"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-200" />
+                  <span>Download Backup Dump</span>
+                </button>
+              </div>
+
+              {/* Upload JSON file */}
+              <div className="p-5 bg-white/[0.02] rounded-none border border-white/10 flex flex-col justify-between h-48 shadow-xs">
+                <div>
+                  <h4 className="font-bold text-white text-xs flex items-center space-x-1.5 font-sans tracking-wide">
+                    <Upload className="w-4 h-4 text-indigo-400" />
+                    <span>Restore Backup File</span>
+                  </h4>
+                  <p className="text-[10.5px] text-white/40 mt-2 leading-relaxed">
+                    Upload a previously downloaded JSON database configuration dump script file to instantly overwrite all current variables.
+                  </p>
+                </div>
+                
+                <label className="w-full py-2 border-2 border-dashed border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 text-white font-bold font-mono text-[9px] uppercase tracking-wider rounded-none flex items-center justify-center space-x-1.5 cursor-pointer mt-3 transition-all">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Backup Dump</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleBackupImport}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Clear Database trigger */}
+            <div className="pt-4 border-t border-white/10">
+              <button
+                onClick={() => {
+                  if (confirm("Are you absolutely sure you want to completely clear the entire database? This wipes all lecturers, courses, halls and active schedules.")) {
+                    onCleanDatabase();
+                  }
+                }}
+                className="py-2.5 px-4 bg-transparent border border-rose-950 text-rose-500 text-[10px] font-mono uppercase tracking-widest font-bold hover:bg-rose-950/20 transition-all rounded-none flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Wipe Database Clean</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Floating ADD NEW Entity Dialog Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-[#000]/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" id="add-modal">
+          <div className="bg-[#0a0a0a] rounded-none shadow-2xl max-w-lg w-full border border-white/15 overflow-hidden">
+            <div className="p-6 border-b border-white/10 bg-white/[0.02]/50">
+              <span className="text-[9px] font-bold text-white/40 font-mono uppercase tracking-widest block mb-0.5">Resource Admin Panel</span>
+              <h3 className="text-base font-bold font-serif italic text-white">
+                {activeTab === "lecturers" && "Create Lecturer Profile"}
+                {activeTab === "courses" && "Create Course Profile"}
+                {activeTab === "venues" && "Create Classroom Venue"}
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[450px] overflow-y-auto bg-[#050505]">
+              {formError && (
+                <div className="p-3 bg-rose-950/20 border border-rose-500/20 text-rose-300 text-[11px] font-semibold rounded-none flex items-center space-x-2">
+                  <Info className="w-4 h-4 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* LECTURER FORM FIELDS */}
+              {activeTab === "lecturers" && (
+                <div className="space-y-4 text-xs font-sans">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Staff ID / Code</label>
+                      <input
+                        type="text" value={lecId} onChange={(e) => setLecId(e.target.value)} placeholder="e.g. L-107"
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40 font-sans">Workload (Hours)</label>
+                      <input
+                        type="number" value={lecHours} onChange={(e) => setLecHours(Number(e.target.value))} min={2} max={30}
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Full Name</label>
+                    <input
+                      type="text" value={lecName} onChange={(e) => setLecName(e.target.value)} placeholder="e.g. Prof. Benson Chidi"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2.5 text-xs font-semibold text-white outline-none focus:border-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Email</label>
+                    <input
+                      type="email" value={lecEmail} onChange={(e) => setLecEmail(e.target.value)} placeholder="name@uniport.edu.ng"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2.5 text-xs font-semibold text-white outline-none focus:border-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Department Block</label>
+                    <select
+                      value={lecDept} onChange={(e) => setLecDept(e.target.value as Department)}
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white"
+                    >
+                      {Object.values(Department).map(d => (<option key={d} value={d}>{d}</option>))}
+                    </select>
+                  </div>
+
+                  {/* Day preferences check block */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Teaching Days Preferences (Soft Constraint)</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DAYS.map(day => (
+                        <button
+                          key={day} onClick={() => togglePreferredDay(day)}
+                          className={`py-1.5 px-3 rounded-none border font-bold text-[9px] tracking-widest uppercase transition-all font-mono cursor-pointer ${
+                            lecDays.includes(day) ? "bg-white border-white text-black font-extrabold shadow-xs" : "bg-transparent border-white/15 text-white/40 hover:text-white"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* COURSE FORM FIELDS */}
+              {activeTab === "courses" && (
+                <div className="space-y-4 text-xs font-sans">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Course Code</label>
+                      <input
+                        type="text" value={crsId} onChange={(e) => setCrsId(e.target.value)} placeholder="e.g. CSC 311"
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Department Domain</label>
+                      <select
+                        value={crsDept} onChange={(e) => setCrsDept(e.target.value as Department)}
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white cursor-pointer"
+                      >
+                        {Object.values(Department).map(d => (<option key={d} value={d}>{d}</option>))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Course Title</label>
+                    <input
+                      type="text" value={crsTitle} onChange={(e) => setCrsTitle(e.target.value)} placeholder="e.g. Compiler Construction & Automata"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2.5 text-xs font-semibold text-white outline-none focus:border-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Level</label>
+                      <select
+                        value={crsLevel} onChange={(e) => setCrsLevel(Number(e.target.value))}
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white cursor-pointer"
+                      >
+                        <option value={100}>100 Level</option>
+                        <option value={200}>200 Level</option>
+                        <option value={300}>300 Level</option>
+                        <option value={400}>400 Level</option>
+                        <option value={500}>500 Level</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Enrollment</label>
+                      <input
+                        type="number" value={crsStudents} onChange={(e) => setCrsStudents(Number(e.target.value))} min={5} max={500}
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Hours/Week</label>
+                      <select
+                        value={crsHours} onChange={(e) => setCrsHours(Number(e.target.value))}
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white cursor-pointer"
+                      >
+                        <option value={2}>2 Hrs (1 Slot)</option>
+                        <option value={4}>4 Hrs (2 Slots)</option>
+                        <option value={6}>6 Hrs (3 Slots)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Assigned Instructor Profile</label>
+                    <select
+                      value={crsLecId} onChange={(e) => setCrsLecId(e.target.value)}
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white cursor-pointer"
+                    >
+                      <option value="">-- Choose Lecturer --</option>
+                      {lecturers.map(l => (
+                        <option key={l.id} value={l.id}>{l.name} ({l.department})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* VENUE FORM FIELDS */}
+              {activeTab === "venues" && (
+                <div className="space-y-4 text-xs font-sans">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Venue ID Code</label>
+                      <input
+                        type="text" value={venId} onChange={(e) => setVenId(e.target.value)} placeholder="e.g. LH-1"
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Capacity Seats</label>
+                      <input
+                        type="number" value={venCapacity} onChange={(e) => setVenCapacity(Number(e.target.value))} min={10} max={1000}
+                        className="w-full bg-[#0a0a0a] border border-[#ffffff1a] rounded-none p-2 text-xs font-semibold text-white outline-none focus:border-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Building Hall Name</label>
+                    <input
+                      type="text" value={venName} onChange={(e) => setVenName(e.target.value)} placeholder="e.g. Main Lecture Theater A"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2.5 text-xs font-semibold text-white outline-none focus:border-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] uppercase tracking-widest font-mono font-bold text-white/40">Building Complex Sector</label>
+                    <input
+                      type="text" value={venBuilding} onChange={(e) => setVenBuilding(e.target.value)} placeholder="Faculty of Computing Block"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-none p-2.5 text-xs font-semibold text-white outline-none focus:border-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-3 bg-white/[0.02]/80 p-3 rounded-none border border-white/10 mt-2 select-none">
+                    <input
+                      type="checkbox" checked={venIsLab} id="is-lab-check" onChange={(e) => setVenIsLab(e.target.checked)}
+                      className="w-4 h-4 rounded-none text-white border-white/20 focus:ring-white bg-[#0a0a0a]"
+                    />
+                    <label htmlFor="is-lab-check" className="font-bold text-[10px] uppercase font-mono tracking-wide text-white/70 cursor-pointer">
+                      Specialized Computer Laboratory (servers/GPU workspaces)
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 bg-[#0a0a0a] border-t border-white/10 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 border border-white/15 bg-transparent hover:bg-white/5 text-white/70 font-semibold font-mono text-[10px] uppercase tracking-widest rounded-none transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (activeTab === "lecturers") submitLecturer();
+                  else if (activeTab === "courses") submitCourse();
+                  else if (activeTab === "venues") submitVenue();
+                }}
+                className="px-5 py-2 bg-white hover:bg-slate-200 text-black font-bold font-mono text-[10px] uppercase tracking-widest rounded-none transition-all outline-none cursor-pointer"
+              >
+                Save Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
