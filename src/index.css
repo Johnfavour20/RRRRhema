@@ -176,81 +176,69 @@ html.theme-light select option {
   color: #0f172a !important;
 }
 
+/* ================ Sophisticated Light Mode Overrides ================ */
+html.theme-light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .bg-\[\#050505\],
+html.theme-light .bg-black,
+html.theme-light .bg-\[\#0a0a0a\] {
+  background-color: #ffffff !important;
+}
+
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/5,
+html.theme-light .border-white\/20 {
+  border-color: #e2e8f0 !important;
+}
+
+html.theme-light .divide-white\/10 {
+  border-color: #f1f5f9 !important;
+}
+
+/* Map Dark-Mode Text to Light Mode */
+html.theme-light .text-white,
+html.theme-light .text-white\/90,
+html.theme-light .text-white\/80 {
+  color: #0f172a !important;
+}
+
+html.theme-light .text-white\/70,
+html.theme-light .text-white\/60,
+html.theme-light .text-white\/50 {
+  color: #475569 !important;
+}
+
+html.theme-light .text-white\/40,
+html.theme-light .text-white\/30,
+html.theme-light .text-white\/20 {
+  color: #94a3b8 !important;
+}
+
 /* Shaded utility elements */
 html.theme-light .bg-white\/\[0\.04\],
 html.theme-light .bg-white\/\[0\.03\],
 html.theme-light .bg-white\/\[0\.02\],
 html.theme-light .bg-white\/5,
 html.theme-light .bg-white\/10,
-html.theme-light .bg-white\/20,
-html.theme-light .bg-zinc-900 {
+html.theme-light .bg-white\/20 {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
-/* Text elements & headings mapping */
-html.theme-light .text-white,
-html.theme-light .text-neutral-200,
-html.theme-light .text-slate-200,
-html.theme-light .text-gray-200,
-html.theme-light .text-zinc-100 {
-  color: #0d1527 !important;
-}
+/* Department chips override inside classes columns grids */
+html.theme-light .bg-\[\#051121\]\/90 { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1e40af !important; }
+html.theme-light .bg-\[\#12081f\]\/90 { background-color: #faf5ff !important; border-color: #a855f7 !important; color: #6b21a8 !important; }
+html.theme-light .bg-\[\#1a0510\]\/90 { background-color: #fff1f2 !important; border-color: #f43f5e !important; color: #9f1239 !important; }
+html.theme-light .bg-\[\#03140e\]\/90 { background-color: #f0fdf4 !important; border-color: #22c55e !important; color: #166534 !important; }
 
-html.theme-light .text-white\/90,
-html.theme-light .text-white\/80,
-html.theme-light .text-white\/70,
-html.theme-light .text-neutral-300,
-html.theme-light .text-gray-300,
-html.theme-light .text-zinc-300 {
-  color: #1e293b !important;
-}
-
-html.theme-light .text-white\/60,
-html.theme-light .text-white\/50,
-html.theme-light .text-neutral-400,
-html.theme-light .text-gray-400,
-html.theme-light .text-zinc-400 {
-  color: #475569 !important;
-}
-
-html.theme-light .text-white\/45,
-html.theme-light .text-white\/40,
-html.theme-light .text-white\/35,
-html.theme-light .text-white\/30,
-html.theme-light .text-white\/20,
-html.theme-light .text-neutral-500,
-html.theme-light .text-gray-500,
-html.theme-light .text-zinc-500 {
-  color: #64748b !important;
-}
-
-/* Specific buttons logic (like Launch Live Planner, Timetable tabs selection) */
+/* Specific buttons logic for clarity */
 html.theme-light button.bg-white {
   background-color: #0f172a !important;
   color: #ffffff !important;
 }
-html.theme-light .bg-white\/\[0\.04\] button {
-  color: #475569 !important;
-}
-html.theme-light .bg-white\/\[0\.04\] button[class*="bg-white"] {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
-}
-
-/* Logo diamond and details adjustment */
-html.theme-light .bg-white.rotate-45 {
-  background-color: #0f172a !important;
-}
-html.theme-light .bg-white.rotate-45 > div {
-  background-color: #ffffff !important;
-}
-
-/* Department chips override inside classes columns grids */
-html.theme-light .bg-\[\#051121\]\/90 {
-  background-color: #e0e7ff !important;
-  color: #1e1b4b !important;
-  border-color: #818cf8 !important;
 }
 html.theme-light .bg-\[\#12081f\]\/90 {
   background-color: #f3e8ff !important;

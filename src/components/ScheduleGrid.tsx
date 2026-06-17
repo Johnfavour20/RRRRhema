@@ -51,7 +51,7 @@ export default function ScheduleGrid({
       case Department.InformationTechnology:
         return "bg-[#03140e]/90 border border-emerald-500/30 text-emerald-100";
       default:
-        return "bg-white/[0.02]/80 border border-white/10 text-white/90";
+        return "bg-white/5 border border-white/10 text-white/90";
     }
   };
 
