@@ -19,7 +19,12 @@ MOCK_USERS = {
     "admin@uniport.edu.ng": {"password": "password123", "name": "Chief Registrar"}
 }
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///timetable.db'
+# Use database URL from environment (Render PostgreSQL) or fallback to local SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///timetable.db')
+# If using Render's PostgreSQL, fix the URL scheme if it starts with 'postgres://'
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 init_db(app)
@@ -276,4 +281,6 @@ def clean_database():
 # Seeding Endpoint
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    # Use PORT provided by Render or default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
