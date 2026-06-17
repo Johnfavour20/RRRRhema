@@ -232,8 +232,8 @@ export default function ScheduleGrid({
 
       {/* Main Grid Calendar Matrix Render */}
       {viewMode === "grid" ? (
-        <div className="flex-1 w-full max-w-full overflow-x-responsive border border-white/10 rounded-none bg-[#050505]" id="timetable-print-area">
-          <table className="min-w-[850px] w-full table-fixed border-collapse select-none sm:select-text">
+        <div className="w-full max-w-full overflow-x-responsive border border-white/10 rounded-none bg-[#050505] shadow-inner" id="timetable-print-area">
+          <table className="min-w-[850px] w-full table-fixed border-collapse select-none sm:select-text touch-pan-x">
             <thead>
               <tr className="bg-white/[0.02]/90 border-b border-white/10 text-white/50 text-[10px] sm:text-xs text-left">
                 <th className="px-2 sm:px-4 py-3 text-center font-bold font-mono tracking-widest text-[8px] sm:text-[9px] w-20 sm:w-28 uppercase text-white/40 bg-white/[0.01]">SLOT</th>

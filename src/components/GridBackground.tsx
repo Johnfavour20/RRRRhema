@@ -19,7 +19,7 @@ export default function GridBackground({
   id
 }: GridBackgroundProps) {
   return (
-    <div id={id} className={`relative min-h-screen bg-[#050505] text-[#F3F4F6] overflow-hidden ${className}`}>
+    <div id={id} className={`relative min-h-screen bg-[#050505] text-[#F3F4F6] overflow-x-hidden ${className}`}>
       {/* Grid Pattern Layer */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-[0.4]"

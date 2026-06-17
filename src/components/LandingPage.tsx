@@ -163,7 +163,7 @@ export default function LandingPage({
       </nav>
 
       {/* Hero section parent container element */}
-      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16 space-y-12 sm:space-y-16 items-center" id="landing-sections-stack">
+      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16 space-y-12 sm:space-y-16" id="landing-sections-stack">
 
         {/* ================= SECTION 1: THE HERO SECTION ================= */}
         <section className="text-center space-y-6 sm:space-y-8 relative max-w-4xl mx-auto py-4 sm:py-8" id="section-hero">
@@ -467,7 +467,7 @@ export default function LandingPage({
 
           {/* Micro-Calendar weekly timetable layout preview */}
           <div className="w-full max-w-full overflow-x-responsive border border-white/10 rounded-none bg-[#0a0a0a] shadow-2xl relative mb-4" id="preview-grid-wrapper">
-            <table className="min-w-[850px] w-full table-fixed border-collapse font-sans select-none sm:select-text">
+            <table className="min-w-[850px] w-full table-fixed border-collapse font-sans select-none sm:select-text touch-pan-x">
               <thead>
                 <tr className="bg-white/[0.02]/90 border-b border-white/10 text-white/50 text-xs text-left">
                   <th className="px-4 py-3 text-center font-bold font-mono tracking-widest text-[8px] w-28 uppercase text-white/30 bg-white/[0.01]">PERIOD</th>
