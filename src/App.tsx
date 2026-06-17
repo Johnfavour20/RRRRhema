@@ -75,8 +75,9 @@ export default function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log("[App] Fetching data from Flask...");
-        const response = await fetch("http://localhost:5000/api/data");
+        const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://rrrrhema-1.onrender.com";
+        console.log(`[App] Fetching data from ${baseUrl}...`);
+        const response = await fetch(`${baseUrl}/api/data`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         

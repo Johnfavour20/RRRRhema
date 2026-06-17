@@ -29,6 +29,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 init_db(app)
 
+@app.route('/')
+def home():
+    return jsonify({
+        "status": "online",
+        "message": "UNIPORT Faculty of Computing Timetable API is running",
+        "version": "1.0.0"
+    }), 200
+
 # GET all data for dashboard
 @app.route('/api/data', methods=['GET'])
 def get_all_data():

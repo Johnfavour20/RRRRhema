@@ -97,9 +97,11 @@ export default function AuthPage({ onBack, onAuthSuccess, initialMode = "signin"
     setApiLogs(updatedStatusLogs);
 
     try {
+      // Use dynamic base URL for production/development
+      const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://rrrrhema-1.onrender.com";
+      
       // We implement actual fetch integration to the Flask API.
-      // This will connect instantly once the user hooks up their backend.
-      const response = await fetch(targetEndpoint, {
+      const response = await fetch(`${baseUrl}${targetEndpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

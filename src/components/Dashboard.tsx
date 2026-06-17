@@ -45,7 +45,8 @@ export default function Dashboard({
   // Fetch Invite Codes
   const fetchInviteCodes = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/invite-codes");
+      const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://rrrrhema-1.onrender.com";
+      const res = await fetch(`${baseUrl}/api/invite-codes`);
       const data = await res.json();
       setInviteCodes(data);
     } catch (err) {
@@ -61,7 +62,8 @@ export default function Dashboard({
 
   const generateInviteCode = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/invite-codes", { method: "POST" });
+      const baseUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://rrrrhema-1.onrender.com";
+      const res = await fetch(`${baseUrl}/api/invite-codes`, { method: "POST" });
       const data = await res.json();
       if (data.success) {
         fetchInviteCodes();
