@@ -294,4 +294,41 @@ html.theme-light ::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.3);
 }
 
+/* Global Responsive Utilities */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Touch-optimized horizontal scrolling */
+.overflow-x-responsive {
+  @apply overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Very small screen adjustments */
+@media (max-width: 400px) {
+  .xs\:hidden {
+    display: none !important;
+  }
+  .xs\:block {
+    display: block !important;
+  }
+  .xs\:flex {
+    display: flex !important;
+  }
+}
+
+/* Refined typography for tiny screens */
+@media (max-width: 350px) {
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+}
+
+
 

@@ -393,22 +393,22 @@ export default function Dashboard({
             <table className="min-w-full text-xs divide-y divide-white/10 text-left">
               <thead>
                 <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
-                  <th className="px-5 py-3">Staff ID</th>
-                  <th className="px-5 py-3">Full Instructor Name</th>
-                  <th className="px-5 py-3">Department Domain</th>
-                  <th className="px-5 py-3">Contact Email</th>
-                  <th className="px-5 py-3">Work Capacity</th>
+                  <th className="px-5 py-3 hidden sm:table-cell">Staff ID</th>
+                  <th className="px-5 py-3">Instructor</th>
+                  <th className="px-5 py-3 hidden md:table-cell">Department</th>
+                  <th className="px-5 py-3 hidden lg:table-cell">Email</th>
+                  <th className="px-5 py-3 hidden sm:table-cell">Capacity</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/70">
                 {lecturers.map((lec) => (
                   <tr key={lec.id} className="hover:bg-white/[0.01]">
-                    <td className="px-5 py-3 font-mono font-bold text-white/40">{lec.id}</td>
+                    <td className="px-5 py-3 font-mono font-bold text-white/40 hidden sm:table-cell">{lec.id}</td>
                     <td className="px-5 py-3 text-white font-bold text-xs">{lec.name}</td>
-                    <td className="px-5 py-3 text-white/60">{lec.department}</td>
-                    <td className="px-5 py-3 text-white/50">{lec.email}</td>
-                    <td className="px-5 py-3 text-white/60 font-mono font-bold">{lec.maxHoursPerWeek} hrs/week</td>
+                    <td className="px-5 py-3 text-white/60 hidden md:table-cell">{lec.department}</td>
+                    <td className="px-5 py-3 text-white/50 hidden lg:table-cell">{lec.email}</td>
+                    <td className="px-5 py-3 text-white/60 font-mono font-bold hidden sm:table-cell">{lec.maxHoursPerWeek} hrs/week</td>
                     <td className="px-5 py-3 text-right">
                       <button
                         onClick={() => onDeleteLecturer(lec.id)}
@@ -439,10 +439,10 @@ export default function Dashboard({
                 <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
                   <th className="px-5 py-3">Course Code</th>
                   <th className="px-5 py-3">Syllabus Title</th>
-                  <th className="px-5 py-3">Department Domain</th>
-                  <th className="px-5 py-3">Target Cohort</th>
-                  <th className="px-5 py-3">Enrollment</th>
-                  <th className="px-5 py-3">Required Hours</th>
+                  <th className="px-5 py-3 hidden md:table-cell">Department</th>
+                  <th className="px-5 py-3 hidden lg:table-cell">Target Cohort</th>
+                  <th className="px-5 py-3 hidden sm:table-cell">Enrollment</th>
+                  <th className="px-5 py-3 hidden lg:table-cell">Required Hours</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -451,10 +451,10 @@ export default function Dashboard({
                   <tr key={crs.id} className="hover:bg-white/[0.01]">
                     <td className="px-5 py-3 font-extrabold text-white text-xs font-mono">{crs.id}</td>
                     <td className="px-5 py-3 text-white/90 font-semibold">{crs.title}</td>
-                    <td className="px-5 py-3 text-white/60">{crs.department}</td>
-                    <td className="px-5 py-3 text-white/50 font-mono font-semibold">{crs.level} Level</td>
-                    <td className="px-5 py-3 text-white/80 font-bold">{crs.studentsCount} Students</td>
-                    <td className="px-5 py-3 font-mono text-white/50">{crs.hoursPerWeek} Hours (Weekly)</td>
+                    <td className="px-5 py-3 text-white/60 hidden md:table-cell">{crs.department}</td>
+                    <td className="px-5 py-3 text-white/50 font-mono font-semibold hidden lg:table-cell">{crs.level} L</td>
+                    <td className="px-5 py-3 text-white/80 font-bold hidden sm:table-cell">{crs.studentsCount}</td>
+                    <td className="px-5 py-3 font-mono text-white/50 hidden lg:table-cell">{crs.hoursPerWeek}h</td>
                     <td className="px-5 py-3 text-right">
                       <button
                         onClick={() => onDeleteCourse(crs.id)}
@@ -483,26 +483,26 @@ export default function Dashboard({
             <table className="min-w-full text-xs divide-y divide-white/10 text-left">
               <thead>
                 <tr className="bg-white/[0.02]/90 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-widest uppercase">
-                  <th className="px-5 py-3">Venue ID</th>
-                  <th className="px-5 py-3">Building Hall Name</th>
-                  <th className="px-5 py-3">Sector Location</th>
-                  <th className="px-5 py-3">Total Seats</th>
-                  <th className="px-5 py-3">Classification</th>
+                  <th className="px-5 py-3 hidden sm:table-cell">ID</th>
+                  <th className="px-5 py-3">Venue Name</th>
+                  <th className="px-5 py-3 hidden md:table-cell">Building</th>
+                  <th className="px-5 py-3">Capacity</th>
+                  <th className="px-5 py-3 hidden md:table-cell">Type</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/70">
                 {venues.map((ven) => (
                   <tr key={ven.id} className="hover:bg-white/[0.01]">
-                    <td className="px-5 py-3 font-mono font-extrabold text-white/40">{ven.id}</td>
+                    <td className="px-5 py-3 font-mono font-extrabold text-white/40 hidden sm:table-cell">{ven.id}</td>
                     <td className="px-5 py-3 text-white font-bold text-xs">{ven.name}</td>
-                    <td className="px-5 py-3 text-white/50">{ven.building}</td>
-                    <td className="px-5 py-3 text-white font-bold font-mono">{ven.capacity} Seats</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 text-white/50 hidden md:table-cell">{ven.building}</td>
+                    <td className="px-5 py-3 text-white font-bold font-mono">{ven.capacity}</td>
+                    <td className="px-5 py-3 hidden md:table-cell">
                       <span className={`inline-block py-0.5 px-2 font-bold text-[8px] font-mono tracking-wider uppercase rounded-none ${
                         ven.isLab ? "bg-amber-950/30 text-amber-300 border border-amber-500/20" : "bg-white/5 text-white/60 border border-white/5"
                       }`}>
-                        {ven.isLab ? "Computers Lab" : "Lecture Hall"}
+                        {ven.isLab ? "Lab" : "Hall"}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">

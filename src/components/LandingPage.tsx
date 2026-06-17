@@ -133,15 +133,15 @@ export default function LandingPage({
   };
 
   return (
-    <GridBackground showRadialFade={true} className="flex flex-col min-h-screen py-0 bg-[#050505]" id="landing-screen-wrapper">
-      <nav className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 md:px-12 py-6 border-b border-white/10 backdrop-blur-md gap-4 w-full" id="landing-brand-nav">
+    <GridBackground showRadialFade={true} className="flex flex-col min-h-screen bg-[#050505]" id="landing-screen-wrapper">
+      <nav className="relative z-20 flex flex-col sm:flex-row items-center justify-between px-4 sm:px-12 py-6 border-b border-white/10 backdrop-blur-md gap-4 w-full" id="landing-brand-nav">
         <div className="flex items-center gap-3">
-          {/* Brand/Logo Removed */}
+          {/* Brand/Logo Placeholder */}
         </div>
-        <div className="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-mono text-white/40">
-          <span>uniport</span>
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-mono text-white/40 text-center">
+          <span>UNIPORT</span>
           <span>FACULTY // COMPUTING</span>
-          <span>SESSION // 2025.26</span>
+          <span className="hidden xs:inline">SESSION // 2025.26</span>
           <span className="text-green-400">● CSA ACTIVE</span>
         </div>
         <div className="flex items-center gap-3">
@@ -150,57 +150,57 @@ export default function LandingPage({
             className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors cursor-pointer"
             title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
           <button
             onClick={() => onEnterApp(false)}
-            className="px-5 py-2 border border-white/20 text-[10px] whitespace-nowrap uppercase tracking-widest hover:bg-white hover:text-black transition-all font-mono rounded-none cursor-pointer"
+            className="px-4 py-2 border border-white/20 text-[9px] sm:text-[10px] whitespace-nowrap uppercase tracking-widest hover:bg-white hover:text-black transition-all font-mono rounded-none cursor-pointer"
           >
-            Access Administrator Panel
+            Portal Access
           </button>
         </div>
       </nav>
 
       {/* Hero section parent container element */}
-      <div className="flex-1 flex flex-col max-w-6xl mx-auto px-6 py-12 md:py-16 space-y-16" id="landing-sections-stack">
+      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16 space-y-12 sm:space-y-16 items-center" id="landing-sections-stack">
 
         {/* ================= SECTION 1: THE HERO SECTION ================= */}
-        <section className="text-center space-y-8 relative max-w-4xl mx-auto py-4" id="section-hero">
+        <section className="text-center space-y-6 sm:space-y-8 relative max-w-4xl mx-auto py-4 sm:py-8" id="section-hero">
           {/* Top Pill Status Badge */}
           <div className="flex justify-center" id="hero-badge-container">
-            <div className="inline-flex items-center space-x-2.5 px-4 py-1.5 bg-white/[0.03] border border-white/10 text-white/70 text-[10px] sm:text-xs font-mono rounded-none tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1] animate-pulse"></span>
-              <span className="opacity-80">UNIPORT DEPLOYMENT REFERENCE // CLASSROOM ALLOCATOR CORE</span>
+            <div className="inline-flex items-center space-x-2.5 px-3 sm:px-4 py-1.5 bg-white/[0.03] border border-white/10 text-white/70 text-[9px] sm:text-xs font-mono rounded-none tracking-wide">
+              <span className="w-1.5 h-1.5 sm:w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1] animate-pulse"></span>
+              <span className="opacity-80">UNIPORT DEPLOYMENT // CSA CORE</span>
             </div>
           </div>
 
           {/* Big Editorial Heading Typography */}
-          <div className="space-y-4" id="hero-headings">
-            <div className="flex items-center justify-center gap-4">
-              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40">Faculty of Computing</span>
-              <div className="h-[1px] w-8 bg-white/20"></div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40">Constraint System</span>
+          <div className="space-y-3 sm:space-y-4" id="hero-headings">
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
+              <span className="text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.3em] text-white/40">Faculty of Computing</span>
+              <div className="h-[1px] w-6 sm:w-8 bg-white/20"></div>
+              <span className="text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.3em] text-white/40">Constraint System</span>
             </div>
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-light leading-[1] tracking-tight text-white">
+            <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl font-serif font-light leading-[1.1] sm:leading-[1] tracking-tight text-white px-2 sm:px-0">
               Smart Timetabling for the <span className="italic font-light text-white/40 block sm:inline">Faculty of Computing</span>
             </h1>
           </div>
 
           {/* Subtitle description */}
-          <p className="text-white/50 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed font-sans" id="hero-subtext">
-            Eliminate scheduling gridlocks, overlapping courses, and venue double-bookings. Powered by a high-performance Constraint Satisfaction Algorithm (CSA) design, our engine automatically coordinates lectures, classrooms, and teacher preferences in seconds.
+          <p className="text-white/50 text-[11px] sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed font-sans px-4 sm:px-0" id="hero-subtext">
+            Eliminate scheduling gridlocks, overlapping courses, and venue double-bookings. Powered by a high-performance Constraint Satisfaction Algorithm (CSA) design.
           </p>
 
           {/* Precise Action Triggers */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4" id="hero-action-buttons">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4 px-4 sm:px-0" id="hero-action-buttons">
             <button
               onClick={() => onEnterApp(true)}
-              className="w-full sm:w-auto px-8 py-3.5 bg-white text-black hover:bg-slate-200 text-[11px] uppercase tracking-widest font-mono font-bold rounded-none cursor-pointer flex items-center justify-center space-x-2.5 transition-all outline-none"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-black hover:bg-slate-200 text-[10px] sm:text-[11px] uppercase tracking-widest font-mono font-bold rounded-none cursor-pointer flex items-center justify-center space-x-2.5 transition-all outline-none"
               id="btn-generate"
             >
-              <Play className="w-3.5 h-3.5 text-black shrink-0 fill-current" />
-              <span>Generate New Timetable</span>
+              <Play className="w-3 h-3 sm:w-3.5 h-3.5 text-black shrink-0 fill-current" />
+              <span>Generate Timetable</span>
             </button>
 
             <button
@@ -210,11 +210,11 @@ export default function LandingPage({
                   element.scrollIntoView({ behavior: "smooth" });
                 }
               }}
-              className="w-full sm:w-auto px-8 py-3.5 bg-transparent text-white border border-white/20 hover:bg-white hover:text-black text-[11px] uppercase tracking-widest font-mono font-bold rounded-none cursor-pointer flex items-center justify-center space-x-2.5 transition-all outline-none"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-transparent text-white border border-white/20 hover:bg-white hover:text-black text-[10px] sm:text-[11px] uppercase tracking-widest font-mono font-bold rounded-none cursor-pointer flex items-center justify-center space-x-2.5 transition-all outline-none"
               id="btn-view-schedules"
             >
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
-              <span>View Active Schedules</span>
+              <Calendar className="w-3 h-3 sm:w-3.5 h-3.5 shrink-0" />
+              <span>View Schedules</span>
             </button>
           </div>
         </section>
@@ -381,65 +381,65 @@ export default function LandingPage({
               <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium italic">Live Timetable Preview</h2>
             </div>
 
-            {/* Live dropdown filters for students and teachers */}
-            <div className="flex flex-wrap items-end gap-3 font-sans">
-              {/* Department Selector */}
-              <div className="space-y-1">
-                <span className="block text-[8px] uppercase tracking-widest font-mono text-white/40">Select Department</span>
-                <select
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value as Department)}
-                  className="bg-[#0c0c0c] border border-white/15 px-3 py-1.5 text-xs text-white outline-none focus:border-white rounded-none cursor-pointer"
-                >
-                  {Object.values(Department).map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Course Level Selector */}
-              <div className="space-y-1">
-                <span className="block text-[8px] uppercase tracking-widest font-mono text-white/40">Select Year Level</span>
-                <select
-                  value={selectedLevel}
-                  onChange={(e) => setSelectedLevel(Number(e.target.value))}
-                  className="bg-[#0c0c0c] border border-white/15 px-3 py-1.5 text-xs text-white outline-none focus:border-white rounded-none cursor-pointer"
-                >
-                  <option value={100}>100 Level</option>
-                  <option value={200}>200 Level</option>
-                  <option value={300}>300 Level</option>
-                  <option value={400}>400 Level</option>
-                  <option value={500}>500 Level</option>
-                </select>
-              </div>
-
-              {/* Action Buttons: Printing PDF is extremely useful for students, CSV for spreadsheets */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  disabled={isDownloading}
-                  className={`px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10.5px] uppercase tracking-widest font-mono font-bold flex items-center gap-1.5 transition-all rounded-none cursor-pointer h-[34px] ${isDownloading ? 'opacity-50' : ''}`}
-                  title="Download Timetable as professional PDF"
-                >
-                  {isDownloading ? (
-                    <Clock className="w-3.5 h-3.5 shrink-0 animate-spin" />
-                  ) : (
-                    <FileDown className="w-3.5 h-3.5 shrink-0" />
-                  )}
-                  <span>{isDownloading ? 'Generating...' : 'Download PDF'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={exportFilteredToCSV}
-                  className="px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10.5px] uppercase tracking-widest font-mono font-bold flex items-center gap-1.5 transition-all rounded-none cursor-pointer h-[34px]"
-                  title="Export Schedule as excel/csv format"
-                >
-                  <FileDown className="w-3.5 h-3.5 shrink-0" />
-                  <span>Export CSV</span>
-                </button>
-              </div>
+          {/* Live dropdown filters for students and teachers */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 font-sans w-full md:w-auto">
+            {/* Department Selector */}
+            <div className="space-y-1 flex-1 sm:flex-none min-w-[140px]">
+              <span className="block text-[8px] uppercase tracking-widest font-mono text-white/40">Department</span>
+              <select
+                value={selectedDept}
+                onChange={(e) => setSelectedDept(e.target.value as Department)}
+                className="w-full bg-[#0c0c0c] border border-white/15 px-3 py-2 text-[11px] text-white outline-none focus:border-white rounded-none cursor-pointer appearance-none"
+              >
+                {Object.values(Department).map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Course Level Selector */}
+            <div className="space-y-1 flex-1 sm:flex-none min-w-[100px]">
+              <span className="block text-[8px] uppercase tracking-widest font-mono text-white/40">Year Level</span>
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(Number(e.target.value))}
+                className="w-full bg-[#0c0c0c] border border-white/15 px-3 py-2 text-[11px] text-white outline-none focus:border-white rounded-none cursor-pointer appearance-none"
+              >
+                <option value={100}>100 L</option>
+                <option value={200}>200 L</option>
+                <option value={300}>300 L</option>
+                <option value={400}>400 L</option>
+                <option value={500}>500 L</option>
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
+                className={`flex-1 sm:flex-none px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10px] uppercase tracking-widest font-mono font-bold flex items-center justify-center gap-2 transition-all rounded-none cursor-pointer h-9 ${isDownloading ? 'opacity-50' : ''}`}
+                title="Download Timetable as PDF"
+              >
+                {isDownloading ? (
+                  <Clock className="w-3 h-3 animate-spin" />
+                ) : (
+                  <FileDown className="w-3.5 h-3.5" />
+                )}
+                <span>PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={exportFilteredToCSV}
+                className="flex-1 sm:flex-none px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10px] uppercase tracking-widest font-mono font-bold flex items-center justify-center gap-2 transition-all rounded-none cursor-pointer h-9"
+                title="Export Schedule as CSV"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                <span>CSV</span>
+              </button>
+            </div>
+          </div>
           </div>
 
           {/* PRINT-ONLY OFFICIAL HEADER COVER */}
@@ -466,8 +466,8 @@ export default function LandingPage({
           )}
 
           {/* Micro-Calendar weekly timetable layout preview */}
-          <div className="overflow-x-auto border border-white/10 rounded-none bg-[#0a0a0a]" id="preview-grid-wrapper">
-            <table className="min-w-[850px] w-full table-fixed border-collapse font-sans">
+          <div className="w-full max-w-full overflow-x-responsive border border-white/10 rounded-none bg-[#0a0a0a] shadow-2xl relative mb-4" id="preview-grid-wrapper">
+            <table className="min-w-[850px] w-full table-fixed border-collapse font-sans select-none sm:select-text">
               <thead>
                 <tr className="bg-white/[0.02]/90 border-b border-white/10 text-white/50 text-xs text-left">
                   <th className="px-4 py-3 text-center font-bold font-mono tracking-widest text-[8px] w-28 uppercase text-white/30 bg-white/[0.01]">PERIOD</th>

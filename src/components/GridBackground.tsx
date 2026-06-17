@@ -48,7 +48,7 @@ export default function GridBackground({
       <div className="absolute top-[40%] right-[20%] w-[500px] h-[500px] bg-white/[0.04] blur-[120px] rounded-full pointer-events-none" />
 
       {/* Content Container */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center">
+      <div className="relative z-10 w-full min-h-screen flex flex-col">
         {children}
       </div>
     </div>

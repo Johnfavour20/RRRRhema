@@ -356,7 +356,7 @@ export default function App() {
       {page === "app" && (
         <div className="flex-1 flex flex-col relative z-10" id="dashboard-system-section">
           {/* Header Navigation Panels */}
-          <header className="bg-[#050505]/95 backdrop-blur-md border-b border-white/10 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm sticky top-0 z-30 shrink-0">
+          <header className="bg-[#050505]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm sticky top-0 z-30 shrink-0">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <div className="flex items-center space-x-3">
                 <button
@@ -364,18 +364,28 @@ export default function App() {
                   className="p-2 hover:bg-white/5 rounded-none text-white/50 hover:text-white transition-all border border-white/10"
                   title="Return to Welcome Screen"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4 sm:w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2.5">
-                  {/* Brand Removed */}
+                  <span className="text-[10px] sm:text-xs font-serif italic text-white/80 hidden xs:block">Academic Matrix Solver</span>
                 </div>
               </div>
+              
+              {/* Mobile Admin Info */}
+              {adminUser && (
+                <div className="xs:hidden flex flex-col items-end">
+                  <div className="flex items-center space-x-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                    <span className="text-[8px] font-mono text-white/70 font-bold uppercase">{adminUser.name.split(" ")[0]}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Application tabs selection */}
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
               {adminUser && (
-                <div className="hidden md:flex flex-col items-end border-r border-white/10 pr-3 mr-1 text-right">
+                <div className="hidden xs:flex flex-col items-end border-r border-white/10 pr-3 mr-1 text-right">
                   <div className="flex items-center space-x-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
                     <span className="text-[10px] font-mono text-white/50 tracking-wider">
@@ -389,107 +399,97 @@ export default function App() {
               <div className="flex space-x-1 bg-white/[0.04] p-1 rounded-none border border-white/10">
                 <button
                   onClick={() => setActiveAppTab("schedule")}
-                  className={`px-4 py-1.5 rounded-none text-[10px] font-mono uppercase tracking-wider transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-none text-[9px] sm:text-[10px] font-mono uppercase tracking-wider transition-all ${
                     activeAppTab === "schedule"
                       ? "bg-white text-black font-semibold shadow-sm"
                       : "text-white/50 hover:text-white"
                   }`}
                 >
-                  Timetable Grid
+                  {/* Icon on very small screens, text on larger */}
+                  <span className="xs:hidden">Grid</span>
+                  <span className="hidden xs:inline">Timetable Grid</span>
                 </button>
                 <button
                   onClick={() => setActiveAppTab("assets")}
-                  className={`px-4 py-1.5 rounded-none text-[10px] font-mono uppercase tracking-wider transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-none text-[9px] sm:text-[10px] font-mono uppercase tracking-wider transition-all ${
                     activeAppTab === "assets"
                       ? "bg-white text-black font-semibold shadow-sm"
                       : "text-white/50 hover:text-white"
                   }`}
                 >
-                  Asset Manager
+                  <span className="xs:hidden">Assets</span>
+                  <span className="hidden xs:inline">Asset Manager</span>
                 </button>
               </div>
 
-              {adminUser && publishedAllocations.length > 0 && activeAppTab === "schedule" && (
-                <button
-                  onClick={() => exportTimetableToPdf(publishedAllocations, courses, lecturers, venues, "UNIPORT_Academic_Timetable")}
-                  className="p-2 border border-emerald-500/20 bg-emerald-950/10 hover:bg-emerald-500 hover:text-black text-emerald-400 rounded-none flex items-center justify-center transition-all cursor-pointer"
-                  title="Download Timetable as PDF"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-              )}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {adminUser && publishedAllocations.length > 0 && activeAppTab === "schedule" && (
+                  <button
+                    onClick={() => exportTimetableToPdf(publishedAllocations, courses, lecturers, venues, "UNIPORT_Academic_Timetable")}
+                    className="p-2 border border-emerald-500/20 bg-emerald-950/10 hover:bg-emerald-500 hover:text-black text-emerald-400 rounded-none flex items-center justify-center transition-all cursor-pointer"
+                    title="Download Timetable as PDF"
+                  >
+                    <Download className="w-3.5 h-3.5 sm:w-4 h-4" />
+                  </button>
+                )}
 
-              <button
-                onClick={() => setTheme(prev => prev === "dark" ? "light" : "dark")}
-                className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors cursor-pointer"
-                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              >
-                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-
-              {adminUser && (
                 <button
-                  onClick={handleRunCSASolver}
-                  disabled={isSolving}
-                  className="px-3 py-2 border border-indigo-500/20 bg-indigo-950/10 hover:bg-indigo-500 hover:text-black text-indigo-400 rounded-none flex items-center justify-center space-x-1.5 transition-all cursor-pointer font-bold font-mono text-[9px] uppercase tracking-widest shrink-0"
-                  title="Execute CSA Backtracking Solver on current database assets"
+                  onClick={() => setTheme(prev => prev === "dark" ? "light" : "dark")}
+                  className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors cursor-pointer"
+                  title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 >
-                  <Sparkles className={`w-3.5 h-3.5 ${isSolving ? 'animate-spin' : ''}`} />
-                  <span>{isSolving ? "Solving..." : "Generate Timetable"}</span>
+                  {theme === "dark" ? <Sun className="w-3.5 h-3.5 sm:w-4 h-4" /> : <Moon className="w-3.5 h-3.5 sm:w-4 h-4" />}
                 </button>
-              )}
 
-              {adminUser && (
-                <button
-                  onClick={handlePublishSchedule}
-                  disabled={isPublishing}
-                  className={`px-3 py-2 border font-mono text-[9px] uppercase tracking-widest transition-all rounded-none cursor-pointer font-bold shrink-0 ${
-                    hasUnpublishedChanges
-                      ? "border-amber-500 text-amber-300 bg-amber-950/20 hover:bg-amber-500 hover:text-black animate-pulse"
-                      : "border-emerald-500/20 text-emerald-400 bg-emerald-950/5 hover:border-emerald-500 hover:bg-emerald-500 hover:text-black"
-                  }`}
-                  title={hasUnpublishedChanges ? "Publish layout adjustments live to General Visitor Desk" : "All modifications synced to General Desk"}
-                >
-                  {isPublishing ? "Syncing..." : hasUnpublishedChanges ? "Publish Draft ●" : "Published"}
-                </button>
-              )}
+                {adminUser && (
+                  <button
+                    onClick={handleRunCSASolver}
+                    disabled={isSolving}
+                    className="px-2.5 sm:px-3 py-2 border border-indigo-500/20 bg-indigo-950/10 hover:bg-indigo-500 hover:text-black text-indigo-400 rounded-none flex items-center justify-center space-x-1.5 transition-all cursor-pointer font-bold font-mono text-[9px] uppercase tracking-widest shrink-0"
+                    title="Execute CSA Backtracking Solver"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isSolving ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">{isSolving ? "Solving..." : "Generate"}</span>
+                  </button>
+                )}
 
-              {adminUser && (
-                <button
-                  onClick={() => {
-                    setAdminUser(null);
-                    setPage("landing");
-                  }}
-                  className="px-3 py-2 border border-rose-500/20 bg-rose-950/10 hover:bg-rose-500 hover:text-black text-[9px] text-rose-350 font-mono uppercase tracking-widest transition-all rounded-none cursor-pointer font-bold shrink-0"
-                  title="Sign Out of Secure Workspace"
-                >
-                  Sign Out
-                </button>
-              )}
+                {adminUser && (
+                  <button
+                    onClick={() => {
+                      setAdminUser(null);
+                      setPage("landing");
+                    }}
+                    className="hidden sm:flex px-3 py-2 border border-rose-500/20 bg-rose-950/10 hover:bg-rose-500 hover:text-black text-[9px] text-rose-350 font-mono uppercase tracking-widest transition-all rounded-none cursor-pointer font-bold shrink-0"
+                    title="Sign Out"
+                  >
+                    Sign Out
+                  </button>
+                )}
+              </div>
             </div>
           </header>
 
           {/* Unpublished draft banner alert */}
           {hasUnpublishedChanges && (
-            <div className="bg-amber-500/10 border-b border-amber-500/25 px-6 py-2.5 flex items-center justify-between text-xs font-sans text-amber-200">
+            <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-xs font-sans text-amber-200 gap-3">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
-                <span>
-                  <strong>Unpublished Changes Active:</strong> You are currently editing a schedule draft. Students and lecturers on the landing homepage are viewing the previous published version of the matrix. Click the sync button to publish live.
+                <span className="leading-tight">
+                  <strong>Draft Active:</strong> Changes are not yet public. <span className="hidden sm:inline">Sync to update the landing page view.</span>
                 </span>
               </div>
               <button
                 onClick={handlePublishSchedule}
                 disabled={isPublishing}
-                className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-mono text-[10px] uppercase tracking-widest font-bold transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-[9px] sm:text-[10px] uppercase tracking-widest font-bold transition-all disabled:opacity-50 cursor-pointer"
               >
-                {isPublishing ? "Syncing Grid..." : "Publish Live Sync"}
+                {isPublishing ? "Syncing..." : "Publish Live"}
               </button>
             </div>
           )}
 
           {/* Master Workspace Splits */}
-          <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-68px)] overflow-y-auto" id="master-visual-split">
+          <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto min-h-0 lg:h-[calc(100vh-68px)] lg:overflow-y-auto" id="master-visual-split">
             {/* MASTER AREA: Expanded content area (taking 12 cols) */}
             <div className="lg:col-span-12 flex flex-col h-full space-y-6">
               {activeAppTab === "schedule" ? (
