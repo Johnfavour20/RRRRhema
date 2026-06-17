@@ -133,9 +133,9 @@ html.theme-light .bg-\[\#050510\],
 html.theme-light .bg-\[\#09090b\],
 html.theme-light .bg-slate-900,
 html.theme-light .bg-stone-900,
-html.theme-light .bg-[#0a0a0a],
-html.theme-light .bg-[#0c0c0c],
-html.theme-light .bg-[#050505] {
+html.theme-light .bg-\[\#0a0a0a\],
+html.theme-light .bg-\[\#0c0c0c\],
+html.theme-light .bg-\[\#050505\] {
   background-color: #ffffff !important;
   color: #0f172a !important;
 }
@@ -160,7 +160,6 @@ html.theme-light .border-neutral-800,
 html.theme-light .border-neutral-700,
 html.theme-light .divide-white\/10 {
   border-color: #cbd5e1 !important;
-  border-opacity: 1 !important;
 }
 
 /* Controls, dialogs, options and inputs styling */
@@ -239,22 +238,6 @@ html.theme-light button.bg-white {
   background-color: #0f172a !important;
   color: #ffffff !important;
 }
-}
-html.theme-light .bg-\[\#12081f\]\/90 {
-  background-color: #f3e8ff !important;
-  color: #3b0764 !important;
-  border-color: #c084fc !important;
-}
-html.theme-light .bg-\[\#1a0510\]\/90 {
-  background-color: #ffe4e6 !important;
-  color: #881337 !important;
-  border-color: #fb7185 !important;
-}
-html.theme-light .bg-\[\#03140e\]\/90 {
-  background-color: #d1fae5 !important;
-  color: #022c22 !important;
-  border-color: #34d399 !important;
-}
 
 /* Hover behaviors */
 html.theme-light .hover\:bg-white:hover {
@@ -295,7 +278,7 @@ html.theme-light ::-webkit-scrollbar-thumb:hover {
 
 /* Touch-optimized horizontal scrolling */
 .overflow-x-responsive {
-  @apply overflow-x-auto;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
