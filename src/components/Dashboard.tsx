@@ -4,9 +4,11 @@
  */
 
 import React, { useState } from "react";
-import { Users, BookOpen, MapPin, Database, Award, Trash2, Plus, Download, Upload, Info, RefreshCcw } from "lucide-react";
+import { Users, BookOpen, MapPin, Database, Award, Trash2, Plus, Download, Upload, Info, RefreshCcw, ShieldCheck, Copy } from "lucide-react";
 import { Course, Lecturer, Venue, Department } from "../types";
 import { TIMESLOTS, DAYS } from "../cspSolver";
+import { exportAssetsToCsv } from "../utils/TimetableExporter";
+import Papa from "papaparse";
 
 interface DashboardProps {
   lecturers: Lecturer[];
@@ -18,12 +20,11 @@ interface DashboardProps {
   onDeleteLecturer: (id: string) => void;
   onDeleteCourse: (id: string) => void;
   onDeleteVenue: (id: string) => void;
-  onSeedData: () => void;
   onCleanDatabase: () => void;
   onRestoreDatabase: (db: { lecturers: Lecturer[]; courses: Course[]; venues: Venue[] }) => void;
 }
 
-type TabType = "lecturers" | "courses" | "venues" | "db-hub";
+type TabType = "lecturers" | "courses" | "venues" | "db-hub" | "admin-access";
 
 export default function Dashboard({
   lecturers,
@@ -35,11 +36,45 @@ export default function Dashboard({
   onDeleteLecturer,
   onDeleteCourse,
   onDeleteVenue,
-  onSeedData,
   onCleanDatabase,
   onRestoreDatabase
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>("lecturers");
+  const [inviteCodes, setInviteCodes] = useState<{id: number, code: string, isUsed: boolean}[]>([]);
+
+  // Fetch Invite Codes
+  const fetchInviteCodes = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/invite-codes");
+      const data = await res.json();
+      setInviteCodes(data);
+    } catch (err) {
+      console.error("Failed to fetch invite codes:", err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === "admin-access") {
+      fetchInviteCodes();
+    }
+  }, [activeTab]);
+
+  const generateInviteCode = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/invite-codes", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        fetchInviteCodes();
+      }
+    } catch (err) {
+      alert("Failed to generate invite code.");
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("Code copied to clipboard!");
+  };
 
   // Form toggles
   const [showAddModal, setShowAddModal] = useState(false);
@@ -88,16 +123,57 @@ export default function Dashboard({
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.lecturers && parsed.courses && parsed.venues) {
-          onRestoreDatabase(parsed);
-          alert("Database successfully restored from JSON backup script!");
-        } else {
-          alert("Invalid file structure. Make sure the JSON configuration template contains lecturers, courses, and venues nodes.");
+      const content = event.target?.result as string;
+      if (file.name.endsWith(".json")) {
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed.lecturers && parsed.courses && parsed.venues) {
+            onRestoreDatabase(parsed);
+            alert("Database successfully restored from JSON backup!");
+          } else {
+            alert("Invalid JSON structure.");
+          }
+        } catch (err) {
+          alert("Failed to parse JSON file.");
         }
-      } catch (err) {
-        alert("Failed to parse JSON backup script File.");
+      } else if (file.name.endsWith(".csv")) {
+        Papa.parse(content, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            // Attempt to determine type based on headers or user pick (simplified here)
+            const data = results.data as any[];
+            if (data.length === 0) return;
+            
+            const first = data[0];
+            if ('email' in first && 'maxHoursPerWeek' in first) {
+              data.forEach(item => onAddLecturer({
+                ...item,
+                maxHoursPerWeek: Number(item.maxHoursPerWeek),
+                preferredDays: item.preferredDays?.split(',') || [],
+                preferredTimes: item.preferredTimes?.split(',') || []
+              }));
+              alert("Lecturers imported from CSV!");
+            } else if ('hoursPerWeek' in first && 'lecturerId' in first) {
+              data.forEach(item => onAddCourse({
+                ...item,
+                level: Number(item.level),
+                studentsCount: Number(item.studentsCount),
+                hoursPerWeek: Number(item.hoursPerWeek)
+              }));
+              alert("Courses imported from CSV!");
+            } else if ('capacity' in first && 'building' in first) {
+              data.forEach(item => onAddVenue({
+                ...item,
+                capacity: Number(item.capacity),
+                isLab: item.isLab === 'true' || item.isLab === true
+              }));
+              alert("Venues imported from CSV!");
+            } else {
+              alert("Unknown CSV format. Headers must match the entity properties.");
+            }
+          }
+        });
       }
     };
     reader.readAsText(file);
@@ -263,6 +339,14 @@ export default function Dashboard({
               Venues ({venues.length})
             </button>
             <button
+              onClick={() => setActiveTab("admin-access")}
+              className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono cursor-pointer ${
+                activeTab === "admin-access" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
+              }`}
+            >
+              Admin Access
+            </button>
+            <button
               onClick={() => setActiveTab("db-hub")}
               className={`px-3 py-1.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono flex items-center space-x-1.5 cursor-pointer ${
                 activeTab === "db-hub" ? "bg-white text-black font-semibold shadow-xs" : "text-white/40 hover:text-white"
@@ -273,7 +357,19 @@ export default function Dashboard({
             </button>
           </nav>
 
-          {activeTab !== "db-hub" && (
+          <div className="flex items-center space-x-2">
+            <button
+               onClick={() => {
+                 if (activeTab === "lecturers") exportAssetsToCsv(lecturers, "UNIPORT_Lecturers");
+                 else if (activeTab === "courses") exportAssetsToCsv(courses, "UNIPORT_Courses");
+                 else if (activeTab === "venues") exportAssetsToCsv(venues, "UNIPORT_Venues");
+               }}
+               className="px-3 py-2 border border-white/10 hover:bg-white/5 text-white/50 hover:text-white text-[9px] font-mono uppercase tracking-widest rounded-none transition-all flex items-center space-x-1.5 cursor-pointer"
+               title="Export Category to CSV"
+            >
+              <Download className="w-3 h-3" />
+              <span>CSV</span>
+            </button>
             <button
               onClick={() => {
                 setFormError("");
@@ -288,7 +384,7 @@ export default function Dashboard({
                 {activeTab === "venues" && "Add Venue"}
               </span>
             </button>
-          )}
+          </div>
         </div>
 
         {/* Tab contents output */}
@@ -432,6 +528,74 @@ export default function Dashboard({
           </div>
         )}
 
+        {activeTab === "admin-access" && (
+          <div className="p-6 bg-white/[0.01] rounded-none border border-white/10 space-y-8" id="dashboard-admin-access-panel">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-lg font-serif italic text-white">Delegated Administrative Access</h3>
+                <p className="text-xs text-white/40 font-sans leading-relaxed max-w-xl">
+                  Generate unique, one-time invitation codes to securely expand the administrator team. 
+                  Shared codes will allow new staff to register using their official faculty credentials.
+                </p>
+              </div>
+              <button
+                onClick={generateInviteCode}
+                className="px-6 py-2.5 bg-white hover:bg-slate-200 text-black font-bold text-[10px] font-mono tracking-widest uppercase rounded-none transition-all flex items-center space-x-2 cursor-pointer shadow-lg shadow-white/5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Generate Unique Code</span>
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-none border border-white/5 bg-[#050505]/50">
+              <table className="min-w-full text-xs text-left">
+                <thead>
+                  <tr className="bg-white/5 border-b border-white/10 text-[9px] text-white/40 font-mono tracking-[0.2em] uppercase">
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Invitation Code String</th>
+                    <th className="px-6 py-4">Generated Date</th>
+                    <th className="px-6 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {inviteCodes.map((c) => (
+                    <tr key={c.id} className="hover:bg-white/[0.01] group">
+                      <td className="px-6 py-4">
+                        <span className="flex items-center space-x-1.5 text-indigo-400 font-mono text-[9px] uppercase font-bold tracking-widest">
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Active</span>
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-white font-mono font-bold text-sm tracking-[0.1em]">{c.code}</span>
+                      </td>
+                      <td className="px-6 py-4 text-white/40 font-mono text-[10px]">
+                        {new Date().toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => copyToClipboard(c.code)}
+                          className="p-1 px-3 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 rounded-none inline-flex items-center space-x-1.5 font-bold text-[9px] uppercase font-mono tracking-widest transition-all cursor-pointer"
+                        >
+                          <Copy className="w-2.5 h-2.5" />
+                          <span>Copy</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {inviteCodes.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-white/20 font-mono uppercase tracking-[0.2em] text-[10px] italic">
+                        No active invitation codes. Generate one to initiate onboarding.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Database control sync hub panel */}
         {activeTab === "db-hub" && (
           <div className="p-4 bg-white/[0.01] rounded-none border border-white/10 space-y-5" id="dashboard-db-panel">
@@ -446,25 +610,6 @@ export default function Dashboard({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Seed */}
-              <div className="p-5 bg-white/[0.02] rounded-none border border-white/10 flex flex-col justify-between h-48 shadow-xs">
-                <div>
-                  <h4 className="font-bold text-white text-xs flex items-center space-x-1.5 font-sans tracking-wide">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span>Seed UNIPORT Faculty Data</span>
-                  </h4>
-                  <p className="text-[10.5px] text-white/40 mt-2 leading-relaxed">
-                    Prepopulate database pools with senior faculty profiles (Prof. Benson, Dr. Grace), 8 complex departmental courses, and 4 major lecture rooms/labs automatically.
-                  </p>
-                </div>
-                <button
-                  onClick={onSeedData}
-                  className="w-full py-2 bg-white hover:bg-slate-200 text-black font-bold font-mono text-[9px] uppercase tracking-wider rounded-none flex items-center justify-center space-x-1.5 cursor-pointer mt-3 transition-all"
-                >
-                  <RefreshCcw className="w-3.5 h-3.5" />
-                  <span>Seeding Pool (Replace)</span>
-                </button>
-              </div>
 
               {/* Download JSON Backup */}
               <div className="p-5 bg-white/[0.02] rounded-none border border-white/10 flex flex-col justify-between h-48 shadow-xs">
@@ -500,10 +645,10 @@ export default function Dashboard({
                 
                 <label className="w-full py-2 border-2 border-dashed border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 text-white font-bold font-mono text-[9px] uppercase tracking-wider rounded-none flex items-center justify-center space-x-1.5 cursor-pointer mt-3 transition-all">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Upload Backup Dump</span>
+                  <span>Upload Backup (JSON/CSV)</span>
                   <input
                     type="file"
-                    accept=".json"
+                    accept=".json,.csv"
                     onChange={handleBackupImport}
                     className="hidden"
                   />

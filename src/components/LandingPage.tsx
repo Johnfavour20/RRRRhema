@@ -4,20 +4,20 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Building2, 
-  Users, 
-  BookOpen, 
-  ShieldCheck, 
-  Sparkles, 
-  FileDown, 
-  Cpu, 
-  MapPin, 
-  GraduationCap, 
-  Calendar, 
-  Play, 
-  User, 
-  BookOpenText, 
+import {
+  Building2,
+  Users,
+  BookOpen,
+  ShieldCheck,
+  Sparkles,
+  FileDown,
+  Cpu,
+  MapPin,
+  GraduationCap,
+  Calendar,
+  Play,
+  User,
+  BookOpenText,
   ArrowRight,
   Database,
   CheckCircle2,
@@ -26,15 +26,22 @@ import {
   AlertCircle,
   Printer,
   Sun,
-  Moon
+  Moon,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Github,
+  Instagram,
+  Youtube,
+  Send
 } from "lucide-react";
 import { Lecturer, Course, Venue, Allocation, Department } from "../types";
 import { DAYS, TIMESLOTS } from "../cspSolver";
+import { exportTimetableToPdf } from "../utils/TimetableExporter";
 import GridBackground from "./GridBackground";
 
 interface LandingPageProps {
   onEnterApp: (autoSolve?: boolean) => void;
-  onEnterThesis: () => void;
   lecturers: Lecturer[];
   courses: Course[];
   venues: Venue[];
@@ -43,9 +50,8 @@ interface LandingPageProps {
   onToggleTheme: () => void;
 }
 
-export default function LandingPage({ 
-  onEnterApp, 
-  onEnterThesis,
+export default function LandingPage({
+  onEnterApp,
   lecturers,
   courses,
   venues,
@@ -56,6 +62,8 @@ export default function LandingPage({
   // Filters for Section 5: Live Preview Grid
   const [selectedDept, setSelectedDept] = useState<Department>(Department.ComputerScience);
   const [selectedLevel, setSelectedLevel] = useState<number>(300);
+
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Filter computations for Section 5
   const filteredPreviewAllocations = allocations.filter((alloc) => {
@@ -100,21 +108,40 @@ export default function LandingPage({
     link.click();
   };
 
+  const handleDownloadPdf = async () => {
+    if (filteredPreviewAllocations.length === 0) {
+      alert("No courses found for the selected Department and Level. Please adjust your filters.");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      // Small timeout to allow UI to show loading state
+      await new Promise(resolve => setTimeout(resolve, 100));
+      exportTimetableToPdf(
+        filteredPreviewAllocations,
+        courses,
+        lecturers,
+        venues,
+        `UNIPORT_${selectedDept.replace(/\s+/g, "_")}_${selectedLevel}L_Timetable`
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <GridBackground showRadialFade={true} className="flex flex-col min-h-screen py-0 bg-[#050505]" id="landing-screen-wrapper">
-      {/* BRAND NAVIGATION HEADER */}
       <nav className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 md:px-12 py-6 border-b border-white/10 backdrop-blur-md gap-4 w-full" id="landing-brand-nav">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-white rotate-45 flex items-center justify-center">
-            <div className="w-3.5 h-3.5 bg-[#050505] rotate-45"></div>
-          </div>
-          <span className="text-sm md:text-base font-bold tracking-[0.25em] uppercase font-serif">
-            VANGUARD<span className="font-sans font-light tracking-[0.1em] text-white/50">&thinsp;SYSTEMS</span>
-          </span>
+          {/* Brand/Logo Removed */}
         </div>
-        <div className="flex gap-6 text-[10px] uppercase tracking-[0.2em] font-mono text-white/40">
-          <span>PORT // HARCOURT</span>
-          <span>EST. 2026</span>
+        <div className="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-mono text-white/40">
+          <span>uniport</span>
+          <span>FACULTY // COMPUTING</span>
+          <span>SESSION // 2025.26</span>
           <span className="text-green-400">● CSA ACTIVE</span>
         </div>
         <div className="flex items-center gap-3">
@@ -125,8 +152,8 @@ export default function LandingPage({
           >
             {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
           </button>
-          
-          <button 
+
+          <button
             onClick={() => onEnterApp(false)}
             className="px-5 py-2 border border-white/20 text-[10px] whitespace-nowrap uppercase tracking-widest hover:bg-white hover:text-black transition-all font-mono rounded-none cursor-pointer"
           >
@@ -137,7 +164,7 @@ export default function LandingPage({
 
       {/* Hero section parent container element */}
       <div className="flex-1 flex flex-col max-w-6xl mx-auto px-6 py-12 md:py-16 space-y-16" id="landing-sections-stack">
-        
+
         {/* ================= SECTION 1: THE HERO SECTION ================= */}
         <section className="text-center space-y-8 relative max-w-4xl mx-auto py-4" id="section-hero">
           {/* Top Pill Status Badge */}
@@ -293,9 +320,9 @@ export default function LandingPage({
 
         {/* ================= SECTION 4: THE FACULTY INSTITUTIONAL HUB ================= */}
         <section className="bg-white/[0.01] border border-white/10 p-8 md:p-12 relative overflow-hidden" id="section-institutional-hub">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+          <div className="flex flex-col space-y-12 relative z-10">
             {/* Text description */}
-            <div className="lg:col-span-7 space-y-4">
+            <div className="max-w-3xl space-y-4">
               <div className="flex items-center space-x-2 text-indigo-400">
                 <Building2 className="w-4 h-4" />
                 <span className="text-[9px] font-bold uppercase tracking-widest font-mono">Institutional Legacy Connect</span>
@@ -304,38 +331,38 @@ export default function LandingPage({
                 Tailored for the <span className="italic text-white/50">UNIPORT Faculty of Computing</span>
               </h2>
               <p className="text-white/60 text-xs sm:text-sm leading-relaxed font-sans pt-1">
-                The rapid expansion of the Faculty of Computing at the University of Port Harcourt (UNIPORT), which proudly grew from the foundational Department of Computer Science, created an unprecedented administrative challenge. Managing massive, specialized student cohorts across four separate departments required a multi-dimensional approach to resource allocation. The Vanguard CSA Scheduler represents our institutional response to this operational complexity.
+                The rapid expansion of the Faculty of Computing at the University of Port Harcourt (UNIPORT), which proudly grew from the foundational Department of Computer Science, created an unprecedented administrative challenge. Managing massive, specialized student cohorts across four separate departments required a multi-dimensional approach to resource allocation. Our system represents our institutional response to this operational complexity.
               </p>
             </div>
 
             {/* Departments List side */}
-            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3" id="hub-departments-list">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="hub-departments-list">
               {/* Dept CSC */}
-              <div className="bg-white/[0.02] p-4 border border-white/10 hover:bg-[#051121]/30 transition-colors">
+              <div className="bg-white/[0.02] p-5 border border-white/10 hover:bg-[#051121]/30 transition-colors flex flex-col h-full">
                 <div className="text-[9px] font-mono font-bold text-indigo-400">CSC</div>
                 <h4 className="font-bold text-white text-[11px] uppercase tracking-wide mt-1">Computer Science</h4>
-                <p className="text-[9px] text-white/30 mt-1 leading-normal font-sans">Core algorithmic computing & complex analytics track.</p>
+                <p className="text-[9px] text-white/30 mt-2 leading-normal font-sans">Core algorithmic computing & complex analytics track.</p>
               </div>
 
               {/* Dept SEN */}
-              <div className="bg-white/[0.02] p-4 border border-white/10 hover:bg-[#12081f]/30 transition-colors">
+              <div className="bg-white/[0.02] p-5 border border-white/10 hover:bg-[#12081f]/30 transition-colors flex flex-col h-full">
                 <div className="text-[9px] font-mono font-bold text-purple-400">SEN</div>
                 <h4 className="font-bold text-white text-[11px] uppercase tracking-wide mt-1">Software Engineering</h4>
-                <p className="text-[9px] text-white/30 mt-1 leading-normal font-sans">Enterprise designs, systems programming & architecture.</p>
+                <p className="text-[9px] text-white/30 mt-2 leading-normal font-sans">Enterprise designs, systems programming & architecture.</p>
               </div>
 
               {/* Dept CYB */}
-              <div className="bg-white/[0.02] p-4 border border-white/10 hover:bg-[#1a0510]/30 transition-colors">
+              <div className="bg-white/[0.02] p-5 border border-white/10 hover:bg-[#1a0510]/30 transition-colors flex flex-col h-full">
                 <div className="text-[9px] font-mono font-bold text-rose-400">CYB</div>
                 <h4 className="font-bold text-white text-[11px] uppercase tracking-wide mt-1">Cyber Security</h4>
-                <p className="text-[9px] text-white/30 mt-1 leading-normal font-sans">Advanced crypto algorithms & infrastructure defense.</p>
+                <p className="text-[9px] text-white/30 mt-2 leading-normal font-sans">Advanced crypto algorithms & infrastructure defense.</p>
               </div>
 
               {/* Dept IFT */}
-              <div className="bg-white/[0.02] p-4 border border-white/10 hover:bg-[#03140e]/30 transition-colors">
+              <div className="bg-white/[0.02] p-5 border border-white/10 hover:bg-[#03140e]/30 transition-colors flex flex-col h-full">
                 <div className="text-[9px] font-mono font-bold text-emerald-400">IFT</div>
                 <h4 className="font-bold text-white text-[11px] uppercase tracking-wide mt-1">Information Technology</h4>
-                <p className="text-[9px] text-white/30 mt-1 leading-normal font-sans">System databases and communication network grids.</p>
+                <p className="text-[9px] text-white/30 mt-2 leading-normal font-sans">System databases and communication network grids.</p>
               </div>
             </div>
           </div>
@@ -390,12 +417,17 @@ export default function LandingPage({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10.5px] uppercase tracking-widest font-mono font-bold flex items-center gap-1.5 transition-all rounded-none cursor-pointer h-[34px]"
-                  title="Print Timetable Matrix or Save to PDF"
+                  onClick={handleDownloadPdf}
+                  disabled={isDownloading}
+                  className={`px-4 py-2 border border-white/15 bg-white/5 hover:bg-white hover:text-black hover:border-white text-white text-[10.5px] uppercase tracking-widest font-mono font-bold flex items-center gap-1.5 transition-all rounded-none cursor-pointer h-[34px] ${isDownloading ? 'opacity-50' : ''}`}
+                  title="Download Timetable as professional PDF"
                 >
-                  <Printer className="w-3.5 h-3.5 shrink-0" />
-                  <span>Print PDF</span>
+                  {isDownloading ? (
+                    <Clock className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                  ) : (
+                    <FileDown className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span>{isDownloading ? 'Generating...' : 'Download PDF'}</span>
                 </button>
                 <button
                   type="button"
@@ -472,7 +504,7 @@ export default function LandingPage({
                                 const crs = courses.find((c) => c.id === alloc.courseId);
                                 const lec = lecturers.find((l) => l.id === alloc.lecturerId);
                                 const ven = venues.find((v) => v.id === alloc.venueId);
-                                
+
                                 if (!crs) return null;
 
                                 return (
@@ -527,53 +559,124 @@ export default function LandingPage({
           </div>
         </section>
 
-        {/* ================= SECTION 6: FOOTER (THE BOTTOM BANNER) ================= */}
-        <footer className="relative z-10 border-t border-white/10 bg-[#050505] pt-10 pb-6 text-xs text-white/40 font-sans" id="landing-footer">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-white rotate-45 flex items-center justify-center shrink-0">
-                <div className="w-2.5 h-2.5 bg-[#050505] rotate-45"></div>
-              </div>
-              <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-white/80">
-                Vanguard Academic Matrix Solver
-              </span>
+        {/* ================= SECTION 6: PREMIUM INSTITUTIONAL FOOTER ================= */}
+        <footer className="relative z-10 border-t border-white/10 bg-[#050505] pt-16 pb-8" id="landing-footer">
+          {/* Subscription / Newsletter Bar */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16 border-b border-white/5 pb-12">
+            <div className="max-w-md">
+              <h3 className="text-xl font-serif italic text-white mb-2">Subscribe for schedule updates</h3>
+              <p className="text-white/40 text-xs font-sans">
+                Get real-time insights on building and scaling academic matrix systems at UNIPORT.
+              </p>
             </div>
-            
-            {/* Quick outbound institutional hyperlinks */}
-            <div className="flex items-center gap-6 text-[10.5px] font-medium font-mono">
-              <a 
-                href="https://uniport.edu.ng" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="hover:text-white transition-colors border-b border-transparent hover:border-white/20 pb-0.5"
-              >
-                UNIPORT Site
-              </a>
-              <a 
-                href="https://uniport.edu.ng/computing" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="hover:text-white transition-colors border-b border-transparent hover:border-white/20 pb-0.5"
-                id="link-computing-faculty"
-              >
-                Faculty of Computing
-              </a>
-              <button 
-                onClick={onEnterThesis}
-                className="hover:text-white transition-colors border-b border-transparent hover:border-white/20 pb-0.5 bg-transparent outline-none cursor-pointer"
-              >
-                Manuscript Thesis
+            <div className="flex w-full lg:w-auto max-w-md bg-white/[0.03] border border-white/10 p-1.5 focus-within:border-white/30 transition-all">
+              <input
+                type="email"
+                placeholder="Enter your institutional email"
+                className="bg-transparent border-none outline-none text-xs text-white px-4 py-2 w-full font-sans"
+              />
+              <button className="bg-white text-black px-6 py-2 text-[10px] uppercase tracking-widest font-bold font-mono hover:bg-slate-200 transition-all cursor-pointer">
+                Subscribe
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 text-[10px] font-mono">
-            <span>© 2026 University of Port Harcourt (UNIPORT) - Faculty of Computing. Core CSA Academic Repository System.</span>
-            <div className="flex items-center space-x-2 bg-white/[0.03] border border-white/10 px-3 py-1 rounded-none text-[9.5px]">
-              <Database className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-white/30">ENGINE ENGINE:</span>
-              <span className="text-indigo-300 font-bold uppercase tracking-wider">Flask Core Engine v1.4.2 // Dual-Constraint SQLite Runtime Active</span>
+          {/* Main Footer Sitemap Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 mb-20 text-[11px] font-sans">
+            {/* Column 1: Academic Units */}
+            <div className="space-y-4">
+              <h4 className="font-mono uppercase tracking-[0.2em] text-white/40 font-bold text-[9px]">Academic Units</h4>
+              <ul className="space-y-2.5 text-white/60">
+                <li className="hover:text-white transition-colors cursor-pointer">Computer Science (CSC)</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Software Engineering (SEN)</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Cyber Security (CYB)</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Information Tech (IFT)</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Graduate Analytics</li>
+              </ul>
             </div>
+
+            {/* Column 2: Registry Hub */}
+            <div className="space-y-4">
+              <h4 className="font-mono uppercase tracking-[0.2em] text-white/40 font-bold text-[9px]">Registry Hub</h4>
+              <ul className="space-y-2.5 text-white/60">
+                <li className="hover:text-white transition-colors cursor-pointer">Live Timetable Archive</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Academic Calendar 25/26</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Course Registration</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Faculty Handbook</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Exam Protocols</li>
+              </ul>
+            </div>
+
+            {/* Column 3: Administration */}
+            <div className="space-y-4">
+              <h4 className="font-mono uppercase tracking-[0.2em] text-white/40 font-bold text-[9px]">Administration</h4>
+              <ul className="space-y-2.5 text-white/60">
+                <li className="hover:text-white transition-colors cursor-pointer">Dean's Office</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Exam Board Committee</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Academic Conflict Resolution</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Quality Assurance Unit</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Resource Planning</li>
+              </ul>
+            </div>
+
+            {/* Column 4: Support Services */}
+            <div className="space-y-4">
+              <h4 className="font-mono uppercase tracking-[0.2em] text-white/40 font-bold text-[9px]">Support Services</h4>
+              <ul className="space-y-2.5 text-white/60">
+                <li className="hover:text-white transition-colors cursor-pointer">ICT Helpdesk</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Computer Lab Booking</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Library Digital Access</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Student Portal Help</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Matrix System API</li>
+              </ul>
+            </div>
+
+            {/* Column 5: About the System */}
+            <div className="space-y-4">
+              <h4 className="font-mono uppercase tracking-[0.2em] text-white/40 font-bold text-[9px]">About the System</h4>
+              <ul className="space-y-2.5 text-white/60">
+                <li className="hover:text-white transition-colors cursor-pointer">Research & History</li>
+                <li className="hover:text-white transition-colors cursor-pointer">CSA Algorithm Design</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Institutional Partners</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Press & Publications</li>
+                <li className="hover:text-white transition-colors cursor-pointer">Career Opportunities</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Legal & Socials Bar */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 pt-10 border-t border-white/5">
+            <div className="flex flex-col sm:flex-row items-center gap-6 lg:gap-10">
+              <div className="flex items-center gap-2.5">
+                {/* Brand Removed */}
+              </div>
+
+              <div className="flex gap-5 text-[9px] font-mono font-bold uppercase tracking-widest text-white/30">
+                <span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
+                <span className="text-white/10">•</span>
+                <span className="hover:text-white transition-colors cursor-pointer">Terms</span>
+                <span className="text-white/10">•</span>
+                <span className="hover:text-white transition-colors cursor-pointer">Code of Conduct</span>
+                <span className="text-white/10">•</span>
+                <span className="hover:text-white transition-colors cursor-pointer">Cookie Preferences</span>
+              </div>
+            </div>
+
+            {/* Social Media Link Array */}
+            <div className="flex items-center gap-5 text-white/30">
+              <Facebook className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+              <Twitter className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+              <Linkedin className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+              <Github className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+              <Instagram className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+              <Youtube className="w-4 h-4 hover:text-white transition-colors cursor-pointer" />
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-[9px] font-mono text-white/20 uppercase tracking-[0.3em]">
+              © 2026 University of Port Harcourt (UNIPORT) - Faculty of Computing. Dedicated Institutional System.
+            </p>
           </div>
         </footer>
 

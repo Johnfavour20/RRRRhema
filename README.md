@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Academic Matrix Solver
 
-# Run and deploy your AI Studio app
+This is a professional-grade academic scheduling system designed for high-density university faculty requirements. Powered by a custom Constraint Satisfaction Algorithm (CSA), it automates complex timetable generation while honoring academic hard constraints and faculty soft-preferences.
 
-This contains everything you need to run your app locally.
+## Deployment & Local Development
 
-View your app in AI Studio: https://ai.studio/apps/2209e403-1fbf-4c23-b7a3-08fadfff6593
+**Prerequisites:**
+- Node.js (v18+)
+- Python (v3.9+)
 
-## Run Locally
+### 1. Frontend Setup
+```bash
+# Install React dependencies
+npm install
 
-**Prerequisites:**  Node.js
+# Start the development server
+npm run dev
+```
 
+### 2. Backend Setup
+```bash
+# Navigate to the server directory
+cd server
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+# Install Python requirements
+pip install -r requirements.txt
+
+# Launch the Flask API
+python app.py
+```
+
+## Features
+- **Deterministic Solver**: Conflict-free allocation for courses and venues.
+- **Asset Manager**: Persistent SQLite-backed CRUD for university resources.
+- **Professional Exports**: Direct PDF download for timetables and CSV for bulk data management.
+- **Manual Reassignment**: Dynamic grid control with persistence.
+
+---
+© 2026 University of Port Harcourt (UNIPORT) - Faculty of Computing.

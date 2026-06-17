@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { GraduationCap, BookOpenText, Database, ArrowLeft, Layout, Settings, AlertTriangle, AlertCircle, Sparkles, BookOpen, Sun, Moon } from "lucide-react";
+import { GraduationCap, BookOpenText, Database, ArrowLeft, Layout, Settings, AlertTriangle, AlertCircle, Sparkles, BookOpen, Sun, Moon, Download } from "lucide-react";
 import { Course, Lecturer, Venue, Allocation, Department, CspMetric } from "./types";
 import { runCsaSolver, getSeedData, SolverStep } from "./cspSolver";
 
@@ -12,11 +12,11 @@ import LandingPage from "./components/LandingPage";
 import ScheduleGrid from "./components/ScheduleGrid";
 import CspVisualization from "./components/CspVisualization";
 import Dashboard from "./components/Dashboard";
-import ThesisViewer from "./components/ThesisViewer";
 import ConflictAnalyzer from "./components/ConflictAnalyzer";
 import AuthPage from "./components/AuthPage";
+import { exportTimetableToPdf } from "./utils/TimetableExporter";
 
-type NavigationPage = "landing" | "app" | "thesis" | "auth";
+type NavigationPage = "landing" | "app" | "auth";
 type PanelTab = "schedule" | "assets";
 
 export default function App() {
@@ -72,36 +72,49 @@ export default function App() {
   // Highlight points for auditor selections
   const [conflictHighlights, setConflictHighlights] = useState<string[]>([]);
 
-  // Seed data on mount if empty
   useEffect(() => {
-    const { lecturers: seededLecturers, courses: seededCourses, venues: seededVenues } = getSeedData();
-    setLecturers(seededLecturers);
-    setCourses(seededCourses);
-    setVenues(seededVenues);
-    
-    // Perform an initial fast run to display a populated schedule upon entrance
-    const loadDefaultSchedule = async () => {
-      const result = await runCsaSolver(seededCourses, seededLecturers, seededVenues, undefined, 0);
-      if (result.success) {
-        setAllocations(result.allocations);
-        setSolverMetric(result.metric);
+    const loadData = async () => {
+      try {
+        console.log("[App] Fetching data from Flask...");
+        const response = await fetch("http://localhost:5000/api/data");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        
+        console.log("[App] Data received:", {
+          lecturers: data.lecturers.length,
+          courses: data.courses.length,
+          venues: data.venues.length,
+          allocations: data.allocations.length
+        });
 
-        // Load or initialize published allocations
+        setLecturers(data.lecturers);
+        setCourses(data.courses);
+        setVenues(data.venues);
+        setAllocations(data.allocations);
+        
         const savedPublished = localStorage.getItem("uniport_csa_published_allocations");
-        if (savedPublished) {
-          try {
-            setPublishedAllocations(JSON.parse(savedPublished));
-          } catch (e) {
-            setPublishedAllocations(result.allocations);
-            localStorage.setItem("uniport_csa_published_allocations", JSON.stringify(result.allocations));
-          }
+        const parsedPublished = savedPublished ? JSON.parse(savedPublished) : [];
+        
+        if (parsedPublished.length > 0) {
+          console.log("[App] Loading published allocations from localStorage");
+          setPublishedAllocations(parsedPublished);
+        } else if (data.allocations.length > 0) {
+          console.log("[App] Auto-publishing server allocations (local cache empty)");
+          setPublishedAllocations(data.allocations);
+          localStorage.setItem("uniport_csa_published_allocations", JSON.stringify(data.allocations));
         } else {
-          setPublishedAllocations(result.allocations);
-          localStorage.setItem("uniport_csa_published_allocations", JSON.stringify(result.allocations));
+          console.log("[App] No allocations found on server or local cache");
         }
+      } catch (error) {
+        console.error("[App] Failed to fetch data from Flask server", error);
+        // Fallback to seeds...
+        const { lecturers: seededLecturers, courses: seededCourses, venues: seededVenues } = getSeedData();
+        setLecturers(seededLecturers);
+        setCourses(seededCourses);
+        setVenues(seededVenues);
       }
     };
-    loadDefaultSchedule();
+    loadData();
   }, []);
 
   // Sync admin user context in localStorage
@@ -126,48 +139,36 @@ export default function App() {
     setIsSolving(true);
     setSolverLogs([
       `[INIT] Bootloader online. Spawning CSA scheduling core...`,
-      `[INIT] Department Variables: CSC, SEN, CYB, IFT`,
-      `[INIT] Inputs: ${courses.length} Course profiles, ${lecturers.length} Lecturers, ${venues.length} Classrooms`,
-      `[INIT] Backtracking searching initialized with speed delay: ${solverDelayMs}ms...`
+      `[INIT] Requesting server-side Solve...`,
     ]);
     setActiveStep(null);
 
     try {
-      const res = await runCsaSolver(
-        courses,
-        lecturers,
-        venues,
-        (step) => {
-          setSolverLogs((prev) => [
-            ...prev,
-            `[${step.stepType.toUpperCase()}] ${step.message}`
-          ]);
-          setActiveStep(step);
-          // Set live allocations to animate filling slots on the screen!
-          setAllocations(step.allocations);
-        },
-        solverDelayMs
-      );
+      const response = await fetch("http://localhost:5000/api/solve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await response.json();
 
-      setAllocations(res.allocations);
-      setSolverMetric(res.metric);
       setIsSolving(false);
 
-      if (res.success) {
+      if (data.success) {
+        setAllocations(data.allocations);
+        setSolverMetric(data.metric);
         setSolverLogs((prev) => [
           ...prev,
-          `[SUCCESS] Perfectly optimized conflict-free configuration generated at ${res.metric.solutionQuality}% quality score!`
+          `[SUCCESS] Perfectly optimized conflict-free configuration generated at ${data.metric.solutionQuality}% quality score!`
         ]);
       } else {
         setSolverLogs((prev) => [
           ...prev,
-          `[FAIL] Backtracking search domains exhausted! Current constraints make it mathematically impossible to accommodate all classes within shared capacity boundaries.`
+          `[FAIL] ${data.message || "Backtracking search domains exhausted! Current constraints make it mathematically impossible to accommodate all classes within shared capacity boundaries."}`
         ]);
       }
     } catch (err) {
       setSolverLogs((prev) => [
         ...prev,
-        `[FAIL] Algorithmic crash detected. Please check database references.`
+        `[FAIL] Backend server connection error. Ensure Flask is running on port 5000.`
       ]);
       setIsSolving(false);
     }
@@ -180,38 +181,79 @@ export default function App() {
     setSolverMetric(null);
   };
 
-  const handleManualReassign = (allocId: string, newDay: string, newTime: string, newVenue: string) => {
+  const handleManualReassign = async (allocId: string, newDay: string, newTime: string, newVenue: string) => {
     setAllocations((prev) =>
       prev.map((a) => (a.id === allocId ? { ...a, day: newDay, timeSlot: newTime, venueId: newVenue } : a))
     );
+
+    try {
+      await fetch("http://localhost:5000/api/allocations/reassign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: allocId,
+          day: newDay,
+          timeSlot: newTime,
+          venueId: newVenue
+        })
+      });
+    } catch (e) {
+      console.error("Failed to persist manual reassignment", e);
+    }
   };
 
   // State Mutators: Lecturers
-  const handleAddLecturer = (lec: Lecturer) => {
-    setLecturers((prev) => [...prev, lec]);
+  const handleAddLecturer = async (lec: Lecturer) => {
+    try {
+      await fetch("http://localhost:5000/api/lecturers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lec)
+      });
+      setLecturers((prev) => [...prev, lec]);
+    } catch (e) { console.error(e); }
   };
-  const handleDeleteLecturer = (id: string) => {
-    setLecturers((prev) => prev.filter((l) => l.id !== id));
-    // Clear foreign key courses mapping
-    setCourses((prev) => prev.map(c => c.lecturerId === id ? { ...c, lecturerId: "" } : c));
+  const handleDeleteLecturer = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/lecturers/${id}`, { method: "DELETE" });
+      setLecturers((prev) => prev.filter((l) => l.id !== id));
+    } catch (e) { console.error(e); }
   };
 
   // State Mutators: Courses
-  const handleAddCourse = (course: Course) => {
-    setCourses((prev) => [...prev, course]);
+  const handleAddCourse = async (course: Course) => {
+    try {
+      await fetch("http://localhost:5000/api/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(course)
+      });
+      setCourses((prev) => [...prev, course]);
+    } catch (e) { console.error(e); }
   };
-  const handleDeleteCourse = (id: string) => {
-    setCourses((prev) => prev.filter((c) => c.id !== id));
-    setAllocations((prev) => prev.filter((a) => a.courseId !== id));
+  const handleDeleteCourse = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/courses/${id}`, { method: "DELETE" });
+      setCourses((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) { console.error(e); }
   };
 
   // State Mutators: Venues
-  const handleAddVenue = (venue: Venue) => {
-    setVenues((prev) => [...prev, venue]);
+  const handleAddVenue = async (venue: Venue) => {
+    try {
+      await fetch("http://localhost:5000/api/venues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(venue)
+      });
+      setVenues((prev) => [...prev, venue]);
+    } catch (e) { console.error(e); }
   };
-  const handleDeleteVenue = (id: string) => {
-    setVenues((prev) => prev.filter((v) => v.id !== id));
-    setAllocations((prev) => prev.filter((a) => a.venueId !== id));
+  const handleDeleteVenue = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/venues/${id}`, { method: "DELETE" });
+      setVenues((prev) => prev.filter((v) => v.id !== id));
+    } catch (e) { console.error(e); }
   };
 
   // Database actions: Seeding
@@ -283,7 +325,6 @@ export default function App() {
               setPage("auth");
             }
           }}
-          onEnterThesis={() => setPage("thesis")}
           lecturers={lecturers}
           courses={courses}
           venues={venues}
@@ -310,44 +351,6 @@ export default function App() {
         />
       )}
 
-      {/* 2. THESIS PLOTTING MODE */}
-      {page === "thesis" && (
-        <div className="flex-1 flex flex-col relative z-10" id="thesis-view-section">
-          <header className="bg-[#050505]/90 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between shadow-xs shrink-0 sticky top-0 z-30">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setPage("landing")}
-                className="p-2 hover:bg-white/5 rounded-none text-white/50 hover:text-white transition-colors border border-transparent hover:border-white/10"
-                title="Return to Welcome Screen"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="border-l border-white/15 pl-3">
-                <span className="block text-[8px] font-bold text-white/40 uppercase tracking-[0.25em] font-mono">Literature Review & Technical Audit</span>
-                <span className="block font-serif italic text-white/90 text-sm font-light">Academic Synthesis Manuscript</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 animate-fade-in">
-              <button
-                onClick={() => setTheme(prev => prev === "dark" ? "light" : "dark")}
-                className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors cursor-pointer"
-                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              >
-                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <button
-                onClick={() => setPage("app")}
-                className="py-1.5 px-4 bg-white hover:bg-slate-250 text-black font-semibold text-[10px] uppercase tracking-widest font-mono rounded-none transition-all cursor-pointer border border-white"
-              >
-                Launch Live Planner
-              </button>
-            </div>
-          </header>
-          <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
-            <ThesisViewer />
-          </div>
-        </div>
-      )}
 
       {/* 3. WORKING Live PLATFORM BOARD */}
       {page === "app" && (
@@ -363,16 +366,8 @@ export default function App() {
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
-                <div className="border-l border-white/15 pl-3 flex items-center gap-3">
-                  <div className="w-5 h-5 bg-white rotate-45 flex items-center justify-center shrink-0">
-                    <div className="w-2.5 h-2.5 bg-[#050505] rotate-45"></div>
-                  </div>
-                  <div>
-                    <span className="block font-serif italic text-white text-sm font-light tracking-wide">
-                      Vanguard Academic <span className="font-sans not-italic font-bold tracking-[0.1em] text-white/40 text-[10px] ml-1 uppercase">// MATRIX</span>
-                    </span>
-                    <span className="block text-[8px] font-bold text-white/45 uppercase tracking-[0.2em] font-mono mt-0.5">Faculty of Computing Core</span>
-                  </div>
+                <div className="flex items-center gap-2.5">
+                  {/* Brand Removed */}
                 </div>
               </div>
             </div>
@@ -414,6 +409,16 @@ export default function App() {
                 </button>
               </div>
 
+              {adminUser && publishedAllocations.length > 0 && activeAppTab === "schedule" && (
+                <button
+                  onClick={() => exportTimetableToPdf(publishedAllocations, courses, lecturers, venues, "UNIPORT_Academic_Timetable")}
+                  className="p-2 border border-emerald-500/20 bg-emerald-950/10 hover:bg-emerald-500 hover:text-black text-emerald-400 rounded-none flex items-center justify-center transition-all cursor-pointer"
+                  title="Download Timetable as PDF"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
+
               <button
                 onClick={() => setTheme(prev => prev === "dark" ? "light" : "dark")}
                 className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors cursor-pointer"
@@ -422,13 +427,17 @@ export default function App() {
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
-              <button
-                onClick={() => setPage("thesis")}
-                className="p-2 border border-white/10 bg-white/[0.02] hover:bg-white/10 text-white/50 hover:text-white rounded-none flex items-center justify-center transition-colors"
-                title="Read Research Manuscript Docs"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
+              {adminUser && (
+                <button
+                  onClick={handleRunCSASolver}
+                  disabled={isSolving}
+                  className="px-3 py-2 border border-indigo-500/20 bg-indigo-950/10 hover:bg-indigo-500 hover:text-black text-indigo-400 rounded-none flex items-center justify-center space-x-1.5 transition-all cursor-pointer font-bold font-mono text-[9px] uppercase tracking-widest shrink-0"
+                  title="Execute CSA Backtracking Solver on current database assets"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${isSolving ? 'animate-spin' : ''}`} />
+                  <span>{isSolving ? "Solving..." : "Generate Timetable"}</span>
+                </button>
+              )}
 
               {adminUser && (
                 <button
@@ -481,8 +490,8 @@ export default function App() {
 
           {/* Master Workspace Splits */}
           <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-68px)] overflow-y-auto" id="master-visual-split">
-            {/* LEFT AREA: Workboard content (taking 8 cols) */}
-            <div className="lg:col-span-8 flex flex-col h-full space-y-6">
+            {/* MASTER AREA: Expanded content area (taking 12 cols) */}
+            <div className="lg:col-span-12 flex flex-col h-full space-y-6">
               {activeAppTab === "schedule" ? (
                 <div className="flex-1 min-h-[400px]">
                   <ScheduleGrid
@@ -506,45 +515,11 @@ export default function App() {
                     onDeleteLecturer={handleDeleteLecturer}
                     onDeleteCourse={handleDeleteCourse}
                     onDeleteVenue={handleDeleteVenue}
-                    onSeedData={handleSeedDatabase}
                     onCleanDatabase={handleCleanDatabase}
                     onRestoreDatabase={handleRestoreDatabase}
                   />
                 </div>
               )}
-            </div>
-
-            {/* RIGHT AREA: Solver core and validation indicators (taking 4 cols) */}
-            <div className="lg:col-span-4 flex flex-col h-full space-y-6">
-              {/* CSA Solver */}
-              <div className="flex-1 min-h-[280px]">
-                <CspVisualization
-                  logs={solverLogs}
-                  activeStep={activeStep}
-                  metric={solverMetric}
-                  isSolving={isSolving}
-                  delayMs={solverDelayMs}
-                  setDelayMs={setSolverDelayMs}
-                  onRunSolver={handleRunCSASolver}
-                  onReset={handleResetSolver}
-                  totalVariables={courses.reduce((acc, c) => acc + Math.max(1, Math.ceil(c.hoursPerWeek / 2)), 0)}
-                />
-              </div>
-
-              {/* Conflict Auditor */}
-              <div className="h-[280px]">
-                <ConflictAnalyzer
-                  allocations={allocations}
-                  courses={courses}
-                  lecturers={lecturers}
-                  venues={venues}
-                  onHighlightConflict={(elements) => {
-                    setConflictHighlights(elements);
-                    // Dismiss highlight after 4 seconds automatically
-                    setTimeout(() => setConflictHighlights([]), 4000);
-                  }}
-                />
-              </div>
             </div>
           </main>
         </div>
